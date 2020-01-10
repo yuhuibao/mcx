@@ -27,7 +27,7 @@ DOXY       := doxygen
 DOCDIR     := $(MCXDIR)/doc
 DOXYCFG=mcxdoxy.cfg
 
-INCLUDEDIRS=-I/usr/local/cuda/include
+INCLUDEDIRS=-I/pub/cuda-9.0/include
 
 CUDART=-lcudart
 CUOMPLINK=
@@ -44,10 +44,10 @@ else ifeq ($(BACKEND),cudastatic)
   else
       CUDART=-lcudadevrt -lcudart_static -ldl -lrt -static-libgcc -static-libstdc++
   endif
-  LINKOPT=-L/usr/local/cuda/lib -lm $(CUDART)
+  LINKOPT=-L/pub/cuda-9.0/lib -lm $(CUDART)
   CUCCOPT=-g -lineinfo -Xcompiler -Wall#-arch compute_20 #--maxrregcount 32
 else
-  LINKOPT=-L/usr/local/cuda/lib -lm $(CUDART)
+  LINKOPT=-L/pub/cuda-9.0/lib -lm $(CUDART)
   CUCCOPT=-g -lineinfo -Xcompiler -Wall#-arch compute_20 #--maxrregcount 32
 endif
 
@@ -89,11 +89,11 @@ else
   ifeq ($(findstring x86_64,$(ARCH)), x86_64)
      CPPOPT +=-m64
      CUCCOPT +=-m64
-     ifeq "$(wildcard /usr/local/cuda/lib64)" "/usr/local/cuda/lib64"
+     ifeq "$(wildcard /pub/cuda-9.0/lib64)" "/pub/cuda-9.0/lib64"
         ifeq ($(BACKEND),cuda)
-           LINKOPT=-L/usr/local/cuda/lib64 $(CUDART) -lm -lstdc++
+           LINKOPT=-L/pub/cuda-9.0/lib64 $(CUDART) -lm -lstdc++
         else ifeq ($(BACKEND),cudastatic)
-           LINKOPT=-L/usr/local/cuda/lib64 $(CUDART) -lm -static-libgcc -static-libstdc++
+           LINKOPT=-L/pub/cuda-9.0/lib64 $(CUDART) -lm -static-libgcc -static-libstdc++
         endif
      endif
   endif
