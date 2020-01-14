@@ -103,7 +103,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
   int        threadid=0;
   const char       *outputtag[]={"data"};
   const char       *datastruct[]={"data","stat","dref"};
-  const char       *statstruct[]={"runtime","nphoton","energytot","energyabs","normalizer","workload"};
+  const char       *statstruct[]={"runtime","nphoton","energytot","energyabs","normalizer","unitinmm","workload"};
   const char       *gpuinfotag[]={"name","id","devcount","major","minor","globalmem",
                                   "constmem","sharedmem","regcount","clock","sm","core",
                                   "autoblock","autothread","maxgate"};
@@ -344,7 +344,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
             cfg.exportfield=NULL;
 
             /** also return the run-time info in outut.runtime */
-            mxArray *stat=mxCreateStructMatrix(1,1,6,statstruct);
+            mxArray *stat=mxCreateStructMatrix(1,1,7,statstruct);
             mxArray *val = mxCreateDoubleMatrix(1,1,mxREAL);
             *mxGetPr(val) = cfg.runtime;
             mxSetFieldByNumber(stat,0,0, val);
@@ -369,11 +369,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]){
             *mxGetPr(val) = cfg.normalizer;
             mxSetFieldByNumber(stat,0,4, val);
 
+            /** return the voxel size unitinmm */
+            val = mxCreateDoubleMatrix(1,1,mxREAL);
+            *mxGetPr(val) = cfg.unitinmm;
+            mxSetFieldByNumber(stat,0,5, val);
+
             /** return the relative workload between multiple GPUs */
             val = mxCreateDoubleMatrix(1,activedev,mxREAL);
 	    for(int i=0;i<activedev;i++)
                 *(mxGetPr(val)+i) = cfg.workload[i];
-            mxSetFieldByNumber(stat,0,5, val);
+            mxSetFieldByNumber(stat,0,6, val);
 
 	    mxSetFieldByNumber(plhs[0],jstruct,1, stat);
         }
@@ -729,7 +734,7 @@ void mcx_set_field(const mxArray *root,const mxArray *item,int idx, Config *cfg)
 	     cfg->workload[i]=val[i];
         printf("mcx.workload=<<%d>>;\n",arraydim[0]*arraydim[1]);
     }else{
-        printf(S_RED"WARNING: redundant field '%s'\n"S_RESET,name);
+        printf(S_RED "WARNING: redundant field '%s'\n" S_RESET,name);
     }
     if(jsonshapes){
         Grid3D grid={&(cfg->vol),&(cfg->dim),{1.f,1.f,1.f},0};
@@ -752,7 +757,8 @@ void mcx_set_field(const mxArray *root,const mxArray *item,int idx, Config *cfg)
  */
 
 void mcx_replay_prep(Config *cfg){
-    int i,j;
+    int i,j, hasdetid=0, offset;
+    float plen;
     if(cfg->seed==SEED_FROM_FILE && detps==NULL)
         mexErrMsgTxt("you give cfg.seed for replay, but did not specify cfg.detphotons.\nPlease define it as the detphoton output from the baseline simulation");
     if(detps==NULL || cfg->seed!=SEED_FROM_FILE)
@@ -761,6 +767,12 @@ void mcx_replay_prep(Config *cfg){
         mexErrMsgTxt("the column numbers of detphotons and seed do not match");
     if(seedbyte==0)
         mexErrMsgTxt("the seed input is empty");
+
+    hasdetid=SAVE_DETID(cfg->savedetflag);
+    offset=SAVE_NSCAT(cfg->savedetflag)*(cfg->medianum-1);
+
+    if(((!hasdetid) && cfg->detnum>1) || !SAVE_PPATH(cfg->savedetflag))
+           mexErrMsgTxt("please rerun the baseline simulation and save detector ID (D) and partial-path (P) using cfg.savedetflag='dp' ");
 
     cfg->replay.weight=(float*)malloc(cfg->nphoton*sizeof(float));
     cfg->replay.tof=(float*)calloc(cfg->nphoton,sizeof(float));
@@ -773,10 +785,11 @@ void mcx_replay_prep(Config *cfg){
                 memcpy((char *)(cfg->replay.seed)+cfg->nphoton*seedbyte, (char *)(cfg->replay.seed)+i*seedbyte, seedbyte);
             cfg->replay.weight[cfg->nphoton]=1.f;
 	    cfg->replay.tof[cfg->nphoton]=0.f;
-            cfg->replay.detid[cfg->nphoton]=(int)(detps[i*dimdetps[0]]);
-            for(j=0;j<cfg->medianum-1;j++){
-                cfg->replay.weight[cfg->nphoton]*=expf(-cfg->prop[j+1].mua*detps[i*dimdetps[0]+cfg->medianum+j]*cfg->unitinmm);
-                cfg->replay.tof[cfg->nphoton]+=detps[i*dimdetps[0]+cfg->medianum+j]*cfg->unitinmm*R_C0*cfg->prop[j+1].n;
+            cfg->replay.detid[cfg->nphoton]=(hasdetid) ? (int)(detps[i*dimdetps[0]]) : 1;
+            for(j=hasdetid;j<cfg->medianum-1+hasdetid;j++){
+	        plen=detps[i*dimdetps[0]+offset+j]*cfg->unitinmm;
+                cfg->replay.weight[cfg->nphoton]*=expf(-cfg->prop[j-hasdetid+1].mua*plen);
+                cfg->replay.tof[cfg->nphoton]+=plen*R_C0*cfg->prop[j-hasdetid+1].n;
             }
             if(cfg->replay.tof[cfg->nphoton]<cfg->tstart || cfg->replay.tof[cfg->nphoton]>cfg->tend) /*need to consider -g*/
                 continue;
@@ -873,7 +886,8 @@ void mcx_validate_config(Config *cfg){
      if(cfg->issavedet==0){
          cfg->issaveexit=0;
 	 cfg->ismomentum=0;
-	 cfg->savedetflag=0;
+	 if(cfg->seed!=SEED_FROM_FILE)
+	    cfg->savedetflag=0;
      }
      if(cfg->respin==0)
          mexErrMsgTxt("respin number can not be 0, check your -r/--repeat input or cfg.respin value");
@@ -898,7 +912,7 @@ void mcx_validate_config(Config *cfg){
         if(cfg->seed==SEED_FROM_FILE){
             if(cfg->respin>1 || cfg->respin<0){
 	       cfg->respin=1;
-	       fprintf(stderr,S_RED"WARNING: respin is disabled in the replay mode\n"S_RESET);
+	       fprintf(stderr,S_RED "WARNING: respin is disabled in the replay mode\n" S_RESET);
 	    }
         }
      }

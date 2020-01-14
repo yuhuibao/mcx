@@ -78,7 +78,7 @@
 
 const char shortopt[]={'h','i','f','n','t','T','s','a','g','b','-','z','u','H','P',
                  'd','r','S','p','e','U','R','l','L','-','I','-','G','M','A','E','v','D',
-		 'k','q','Y','O','F','-','-','x','X','-','K','m','V','B','W','w','\0'};
+		 'k','q','Y','O','F','-','-','x','X','-','K','m','V','B','W','w','-','\0'};
 
 /**
  * Long command line options
@@ -95,7 +95,7 @@ const char *fullopt[]={"--help","--interactive","--input","--photon",
 		 "--seed","--version","--debug","--voidtime","--saveseed",
 		 "--replaydet","--outputtype","--outputformat","--maxjumpdebug",
                  "--maxvoidstep","--saveexit","--saveref","--gscatter","--mediabyte",
-                 "--momentum","--specular","--bc","--workload","--savedetflag",""};
+                 "--momentum","--specular","--bc","--workload","--savedetflag","--internalsrc",""};
 
 /**
  * Output data types
@@ -250,6 +250,7 @@ void mcx_initcfg(Config *cfg){
      cfg->issaveseed=0;
      cfg->issaveexit=0;
      cfg->ismomentum=0;
+     cfg->internalsrc=0;
      cfg->replay.seed=NULL;
      cfg->replay.weight=NULL;
      cfg->replay.tof=NULL;
@@ -325,6 +326,8 @@ void mcx_clearcfg(Config *cfg){
         free(cfg->exportfield);
      if(cfg->exportdetected)
         free(cfg->exportdetected);
+     if(cfg->exportdebugdata)
+        free(cfg->exportdebugdata);
      if(cfg->seeddata)
         free(cfg->seeddata);
 
@@ -756,6 +759,14 @@ void mcx_prepdomain(char *filename, Config *cfg){
 		mcx_convertrow2col(&(cfg->vol), &(cfg->dim));
 		cfg->isrowmajor=0;
 	}
+        if(cfg->issavedet && cfg->detnum==0)
+            cfg->issavedet=0;
+        if(cfg->issavedet==0){
+            cfg->issaveexit=0;
+	    cfg->ismomentum=0;
+	    if(cfg->seed!=SEED_FROM_FILE)
+	        cfg->savedetflag=0;
+        }
 	if(cfg->issavedet)
 		mcx_maskdet(cfg);
 	if(cfg->isdumpmask)
@@ -806,7 +817,7 @@ void mcx_prepdomain(char *filename, Config *cfg){
      }
      if(cfg->issavedet && cfg->savedetflag==0)
          cfg->savedetflag=0x5;
-     if(cfg->mediabyte>=100){
+     if(cfg->mediabyte>=100 && cfg->savedetflag){
 	 cfg->savedetflag=UNSET_SAVE_NSCAT(cfg->savedetflag);
 	 cfg->savedetflag=UNSET_SAVE_PPATH(cfg->savedetflag);
 	 cfg->savedetflag=UNSET_SAVE_MOM(cfg->savedetflag);
@@ -982,8 +993,7 @@ void mcx_loadconfig(FILE *in, Config *cfg){
          mcx_error(-4,"input media types plus detector number exceeds the maximum total (4000)",__FILE__,__LINE__);
 
      cfg->detpos=(float4*)malloc(sizeof(float4)*cfg->detnum);
-     if(cfg->issavedet && cfg->detnum==0) 
-      	cfg->issavedet=0;
+
      for(i=0;i<cfg->detnum;i++){
         if(in==stdin)
 		fprintf(stdout,"Please define detector #%d: x,y,z (in grid unit): [5 5 5 1]\n\t",i);
@@ -1327,8 +1337,6 @@ int mcx_loadjson(cJSON *root, Config *cfg){
            if(det){
              cfg->detnum=cJSON_GetArraySize(dets);
              cfg->detpos=(float4*)malloc(sizeof(float4)*cfg->detnum);
-	     if(cfg->issavedet && cfg->detnum==0) 
-      		cfg->issavedet=0;
              for(i=0;i<cfg->detnum;i++){
                cJSON *pos=dets, *rad=NULL;
                rad=FIND_JSON_OBJ("R","Optode.Detector.R",det);
@@ -1365,13 +1373,14 @@ int mcx_loadjson(cJSON *root, Config *cfg){
         if(!flagset['S'])  cfg->issave2pt=FIND_JSON_KEY("DoSaveVolume","Session.DoSaveVolume",Session,cfg->issave2pt,valueint);
         if(!flagset['U'])  cfg->isnormalized=FIND_JSON_KEY("DoNormalize","Session.DoNormalize",Session,cfg->isnormalized,valueint);
         if(!flagset['d'])  cfg->issavedet=FIND_JSON_KEY("DoPartialPath","Session.DoPartialPath",Session,cfg->issavedet,valueint);
-        if(!flagset['X'])  cfg->issaveexit=FIND_JSON_KEY("DoSaveExit","Session.DoSaveExit",Session,cfg->issaveexit,valueint);
+        if(!flagset['X'])  cfg->issaveref=FIND_JSON_KEY("DoSaveRef","Session.DoSaveRef",Session,cfg->issaveref,valueint);
+        if(!flagset['x'])  cfg->issaveexit=FIND_JSON_KEY("DoSaveExit","Session.DoSaveExit",Session,cfg->issaveexit,valueint);
         if(!flagset['q'])  cfg->issaveseed=FIND_JSON_KEY("DoSaveSeed","Session.DoSaveSeed",Session,cfg->issaveseed,valueint);
         if(!flagset['A'])  cfg->autopilot=FIND_JSON_KEY("DoAutoThread","Session.DoAutoThread",Session,cfg->autopilot,valueint);
 	if(!flagset['m'])  cfg->ismomentum=FIND_JSON_KEY("DoDCS","Session.DoDCS",Session,cfg->ismomentum,valueint);
 	if(!flagset['V'])  cfg->isspecular=FIND_JSON_KEY("DoSpecular","Session.DoSpecular",Session,cfg->isspecular,valueint);
-	if(!flagset['D'])  cfg->debuglevel=mcx_parsedebugopt(FIND_JSON_KEY("Debug","Session.Debug",Session,"",valuestring),debugflag);
-	cfg->savedetflag=mcx_parsedebugopt(FIND_JSON_KEY("SaveDataMask","Session.SaveDataMask",Session,"",valuestring),saveflag);
+	if(!flagset['D'])  cfg->debuglevel=mcx_parsedebugopt(FIND_JSON_KEY("DebugFlag","Session.DebugFlag",Session,"",valuestring),debugflag);
+	if(!flagset['w'])  cfg->savedetflag=mcx_parsedebugopt(FIND_JSON_KEY("SaveDataMask","Session.SaveDataMask",Session,"",valuestring),saveflag);
 
         if(!cfg->outputformat)  cfg->outputformat=mcx_keylookup((char *)FIND_JSON_KEY("OutputFormat","Session.OutputFormat",Session,"mc2",valuestring),outputformat);
         if(cfg->outputformat<0)
@@ -1576,8 +1585,15 @@ void mcx_loadseedfile(Config *cfg){
     cfg->nphoton=his.savedphoton;
 
     if(cfg->outputtype==otJacobian || cfg->outputtype==otWP || cfg->outputtype==otDCS ){ //cfg->replaydet>0
-       int i,j;
-       float *ppath=(float*)malloc(his.savedphoton*his.colcount*sizeof(float));
+       int i,j, hasdetid=0, offset;
+       float plen, *ppath;
+       hasdetid=SAVE_DETID(his.savedetflag);
+       offset=SAVE_NSCAT(his.savedetflag)*his.maxmedia;
+
+       if(((!hasdetid) && cfg->detnum>1) || !SAVE_PPATH(his.savedetflag))
+           mcx_error(-7,"please rerun the baseline simulation and save detector ID (D) and partial-path (P) using '-w DP'",__FILE__,__LINE__);
+
+       ppath=(float*)malloc(his.savedphoton*his.colcount*sizeof(float));
        cfg->replay.weight=(float*)malloc(his.savedphoton*sizeof(float));
        cfg->replay.tof=(float*)calloc(his.savedphoton,sizeof(float));
        cfg->replay.detid=(int*)calloc(his.savedphoton,sizeof(int));
@@ -1591,10 +1607,11 @@ void mcx_loadseedfile(Config *cfg){
                if(i!=cfg->nphoton)
                    memcpy((char *)(cfg->replay.seed)+cfg->nphoton*his.seedbyte, (char *)(cfg->replay.seed)+i*his.seedbyte, his.seedbyte);
                cfg->replay.weight[cfg->nphoton]=1.f;
-	       cfg->replay.detid[cfg->nphoton]=(int)(ppath[i*his.colcount]);
-               for(j=2;j<his.maxmedia+2;j++){
-                   cfg->replay.weight[cfg->nphoton]*=expf(-cfg->prop[j-1].mua*ppath[i*his.colcount+j]*his.unitinmm);
-                   cfg->replay.tof[cfg->nphoton]+=ppath[i*his.colcount+j]*his.unitinmm*R_C0*cfg->prop[j-1].n;
+               cfg->replay.detid[cfg->nphoton]=(hasdetid) ? (int)(ppath[i*his.colcount]): 1;
+               for(j=hasdetid;j<his.maxmedia+hasdetid;j++){
+	           plen=ppath[i*his.colcount+offset+j]*his.unitinmm;
+                   cfg->replay.weight[cfg->nphoton]*=expf(-cfg->prop[j-hasdetid+1].mua*plen);
+                   cfg->replay.tof[cfg->nphoton]+=plen*R_C0*cfg->prop[j-hasdetid+1].n;
                }
                if(cfg->replay.tof[cfg->nphoton]<cfg->tstart || cfg->replay.tof[cfg->nphoton]>cfg->tend) /*need to consider -g*/
                    continue;
@@ -2095,6 +2112,8 @@ void mcx_parsecmd(int argc, char* argv[], Config *cfg){
                                      i=mcx_readarg(argc,argv,i,cfg->rootpath,"string");
                                 else if(strcmp(argv[i]+2,"reflectin")==0)
                                      i=mcx_readarg(argc,argv,i,&(cfg->isrefint),"char");
+                                else if(strcmp(argv[i]+2,"internalsrc")==0)
+		                     i=mcx_readarg(argc,argv,i,&(cfg->internalsrc),"int");
                                 else
                                      MCX_FPRINTF(cfg->flog,"unknown verbose option: --%s\n",argv[i]+2);
 		     	        break;
@@ -2409,6 +2428,7 @@ where possible parameters include (the first value in [*|*] is the default)\n\
  --gscatter     [1e9|int]      after a photon completes the specified number of\n\
                                scattering events, mcx then ignores anisotropy g\n\
                                and only performs isotropic scattering for speed\n\
+ --internalsrc  [0|1]          set to 1 to skip entry search to speedup launch\n\
  --maxvoidstep  [1000|int]     maximum distance (in voxel unit) of a photon that\n\
                                can travel before entering the domain, if \n\
                                launched outside (i.e. a widefield source)\n\

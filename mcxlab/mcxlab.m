@@ -94,6 +94,12 @@ function varargout=mcxlab(varargin)
 %      cfg.gscatter:   after a photon completes the specified number of
 %                      scattering events, mcx then ignores anisotropy g
 %                      and only performs isotropic scattering for speed [1e9]
+%      cfg.detphotons: detected photon data for replay. In the replay mode (cfg.seed 
+%                      is set as the 4th output of the baseline simulation), cfg.detphotons
+%                      should be set to the 2nd output (detphoton) of the baseline simulation
+%                      or detphoton.data subfield (as a 2D array). cfg.detphotons can use
+%                      a subset of the detected photon selected by the user.
+%                      Example: <demo_mcxlab_replay.m>
 %
 %== GPU settings ==
 %      cfg.autopilot:  1-automatically set threads and blocks, [0]-use nthread/nblocksize
@@ -217,10 +223,25 @@ function varargout=mcxlab(varargin)
 %
 % Output:
 %      fluence: a struct array, with a length equals to that of cfg.
-%            For each element of fluence, fluence(i).data is a 4D array with
-%            dimensions specified by [size(vol) total-time-gates]. 
-%            The content of the array is the normalized fluence at 
-%            each voxel of each time-gate.
+%            For each element of fluence, 
+%            fluence(i).data is a 4D array with
+%                 dimensions specified by [size(vol) total-time-gates]. 
+%                 The content of the array is the normalized fluence at 
+%                 each voxel of each time-gate.
+%            fluence(i).dref is a 4D array with the same dimension as fluence(i).data
+%                 if cfg.issaveref is set to 1, containing only non-zero values in the 
+%                 layer of voxels immediately next to the non-zero voxels in cfg.vol,
+%                 storing the normalized total diffuse reflectance (summation of the weights 
+%                 of all escaped photon to the background regardless of their direction);
+%                 it is an empty array [] when if cfg.issaveref is 0.
+%            fluence(i).stat is a structure storing additional information, including
+%                 runtime: total simulation run-time in millisecond
+%                 nphoton: total simulated photon number
+%                 energytot: total initial weight/energy of all launched photons
+%                 energyabs: total absorbed weight/energy of all photons
+%                 normalizer: normalization factor
+%                 unitinmm: same as cfg.unitinmm, voxel edge-length in mm
+%
 %      detphoton: (optional) a struct array, with a length equals to that of cfg.
 %            Starting from v2018, the detphoton contains the below subfields:
 %              detphoton.detid: the ID(>0) of the detector that captures the photon
@@ -324,6 +345,24 @@ if(isstruct(varargin{1}))
                 varargin{1}(i).vol=varargin{1}(i).vol*varargin{1}(i).unitinmm;
             end
         end
+	if(isfield(varargin{1}(i),'detphotons') && isstruct(varargin{1}(i).detphotons))
+	    if(isfield(varargin{1}(i).detphotons,'data'))
+	        varargin{1}(i).detphotons=varargin{1}(i).detphotons.data;
+	    else
+	        fulldetdata={'detid','nscat','ppath','mom','p','v','w0'};
+	        detfields=ismember(fulldetdata,fieldnames(varargin{1}(i).detphotons));
+		detdata=[];
+		for j=1:length(detfields)
+		    if(detfields(j))
+                        val=typecast(varargin{1}(i).detphotons.(fulldetdata{j})(:),'single');
+		        detdata=[detdata reshape(val,size(varargin{1}(i).detphotons.(fulldetdata{j})))];
+		    end
+		end
+		varargin{1}(i).detphotons=detdata';
+		varargin{1}(i).savedetflag='dspmxvw';
+		varargin{1}(i).savedetflag(detfields==0)=[];
+	    end
+        end
     end
 end
 
@@ -377,47 +416,18 @@ if(nargout>=2)
             if(isempty(detp))
                 continue;
             end
-            c0=1;
-            len=1;
-            if(regexp(cfg(i).savedetflag,'[dD]'))
-                if(isfield(cfg(i),'issaveref') && cfg(i).issaveref>1)
-                    newdetp.w0=detp(1,:)';
-                else
-                    newdetp.detid=int32(detp(1,:))';
-                end
-                c0=2;
+            flags={cfg(i).savedetflag};
+            if(isfield(cfg(i),'issaveref'))
+                flags{end+1}=cfg(i).issaveref;
             end
-            len=medianum;
-            if(regexp(cfg(i).savedetflag,'[sS]'))
-                newdetp.nscat=int32(detp(c0:(c0+len-1),:))';    % 1st medianum block is num of scattering
-                c0=c0+len;
+            if(isfield(cfg(i),'srcnum'))
+                flags{end+1}=cfg(i).srcnum;
             end
-            if(regexp(cfg(i).savedetflag,'[pP]'))
-                newdetp.ppath=detp(c0:(c0+len-1),:)';% 2nd medianum block is partial path
-                c0=c0+len;
-            end
-            if(regexp(cfg(i).savedetflag,'[mM]'))
-                newdetp.mom=detp(c0:(c0+len-1),:)'; % 3rd medianum block is the momentum transfer
-                c0=c0+len;
-            end
-            len=3;
-            if(regexp(cfg(i).savedetflag,'[xX]'))
-                newdetp.p=detp(c0:(c0+len-1),:)';             %columns 7-5 from the right store the exit positions
-                c0=c0+len;
-            end
-            if(regexp(cfg(i).savedetflag,'[vV]'))
-                newdetp.v=detp(c0:(c0+len-1),:)';	     %columns 4-2 from the right store the exit dirs
-                c0=c0+len;
-            end
-            if(regexp(cfg(i).savedetflag,'[wW]'))
-                len=1;
-                newdetp.w0=detp(c0:(c0+len-1),:)';  % last column is the initial packet weight
-                if(isfield(cfg(i),'srcnum') && cfg(i).srcnum>1)
-                    newdetp.w0=typecast(newdetp.w0,'uint32');
-                end
-                c0=c0+len;
-            end
+            newdetp=mcxdetphoton(detp,medianum,flags{:});
             newdetp.prop=cfg(i).prop;
+	    if(isfield(cfg(i),'unitinmm'))
+		newdetp.unitinmm=cfg(i).unitinmm;
+	    end
             newdetp.data=detp;      % enable this line for compatibility
             newdetpstruct(i)=newdetp;
         else
