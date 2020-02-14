@@ -671,7 +671,12 @@ __device__ inline void rotatevector(MCXdir *v, float stheta, float ctheta, float
       }
       GPUDEBUG(("new dir: %10.5e %10.5e %10.5e\n",v->x,v->y,v->z));
 }
-
+__device__ inline uint umin(uint a,uint b){
+    if(a < b){
+        return a;
+    }
+    return b;
+}
 /**
  * @brief Terminate a photon and launch a new photon according to specified source form
  *

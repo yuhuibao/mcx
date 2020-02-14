@@ -48,39 +48,39 @@ extern "C" {
 
 typedef float4 MCXpos; /**< x,y,z: position of the photon, w: weight of the photon*/
 
-typedef struct  __align__(16) MCXDir{
+typedef struct  __attribute__((aligned(16))) MCXDir{
         float x; /**< directional vector of the photon, x-component*/
 	float y; /**< directional vector of the photon, y-component*/
 	float z; /**< directional vector of the photon, z-component*/
         float nscat; /**< total number of scattering events*/
 }MCXdir;
 
-typedef struct  __align__(16) MCXTimer{
+typedef struct  __attribute__((aligned(16))) MCXTimer{
         float pscat; /**< remaining unit-less scattering length = length * scattering coeff */
         float t;     /**< photon elapse time, unit=s*/
 	float pathlen; /**< photon total pathlength inside a voxel, in grid unit*/
 	float ndone; /**< number of completed photons*/
 }MCXtime;
 
-typedef union  __align__(16) GPosition{
+typedef union  __attribute__((aligned(16))) GPosition{
 	MCXpos d;
 	float4 v;
 	float  f[4];
 }Gpos;
 
-typedef union  __align__(16) GDirection{
+typedef union  __attribute__((aligned(16))) GDirection{
         MCXdir d;
         float4 v;
 	float  f[4];
 }Gdir;
 
-typedef union  __align__(16) GLength{
+typedef union  __attribute__((aligned(16))) GLength{
         MCXtime d;
         float4 v;
 	float  f[4];
 }Glen;
 
-typedef union  __align__(16) GProperty{
+typedef union  __attribute__((aligned(16))) GProperty{
         Medium d; /*defined in mcx_utils.h*/
         float4 v;
 	float  f[4];
@@ -94,7 +94,7 @@ typedef unsigned char uchar;
  * This struct stores all constants used in the simulation.
  */
 
-typedef struct  __align__(16) KernelParams {
+typedef struct  __attribute__((aligned(16))) KernelParams {
   float3 vsize;                      /**< volume voxel size in grid unit, always 1,1,1 */
   float  minstep;                    /**< minimum step of the 3, always 1 */
   float  twin0;                      /**< starting time of the current time gate, unit is s */
