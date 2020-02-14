@@ -1924,7 +1924,7 @@ void mcx_run_simulation(Config *cfg,GPUInfo *gpu){
      CUDA_ASSERT(hipMalloc((void **) &genergy, sizeof(float)*(gpu[gpuid].autothread<<1)));
 
      CUDA_ASSERT(hipHostMalloc((void **)&progress, sizeof(int), hipHostMallocMapped));
-     CUDA_ASSERT(hipHostGetDevicePointer((int **)&gprogress, (int *)progress, 0));
+     CUDA_ASSERT(hipHostGetDevicePointer((void **)&gprogress, (void *)progress, 0));
      *progress = 0;
 
      if(cfg->debuglevel & MCX_DEBUG_MOVE){
@@ -2096,10 +2096,10 @@ void mcx_run_simulation(Config *cfg,GPUInfo *gpu){
 	       case 1:  hipLaunchKernelGGL(HIP_KERNEL_NAME(mcx_main_loop<0,0,1>), dim3(mcgrid), dim3(mcblock), sharedbuf, 0, gmedia,gfield,genergy,gPseed,gPpos,gPdir,gPlen,gPdet,gdetected,gsrcpattern,greplayw,greplaytof,greplaydetid,gseeddata,gdebugdata,gprogress);break;
 	       case 10: hipLaunchKernelGGL(HIP_KERNEL_NAME(mcx_main_loop<0,1,0>), dim3(mcgrid), dim3(mcblock), sharedbuf, 0, gmedia,gfield,genergy,gPseed,gPpos,gPdir,gPlen,gPdet,gdetected,gsrcpattern,greplayw,greplaytof,greplaydetid,gseeddata,gdebugdata,gprogress);break;
 	       case 11: hipLaunchKernelGGL(HIP_KERNEL_NAME(mcx_main_loop<0,1,1>), dim3(mcgrid), dim3(mcblock), sharedbuf, 0, gmedia,gfield,genergy,gPseed,gPpos,gPdir,gPlen,gPdet,gdetected,gsrcpattern,greplayw,greplaytof,greplaydetid,gseeddata,gdebugdata,gprogress);break;
-	       case hipLaunchKernelGGL(HIP_KERNEL_NAME(100:mcx_main_loop<1,0,0>), dim3(mcgrid), dim3(mcblock), sharedbuf, 0, gmedia,gfield,genergy,gPseed,gPpos,gPdir,gPlen,gPdet,gdetected,gsrcpattern,greplayw,greplaytof,greplaydetid,gseeddata,gdebugdata,gprogress);break;
-	       case hipLaunchKernelGGL(HIP_KERNEL_NAME(101:mcx_main_loop<1,0,1>), dim3(mcgrid), dim3(mcblock), sharedbuf, 0, gmedia,gfield,genergy,gPseed,gPpos,gPdir,gPlen,gPdet,gdetected,gsrcpattern,greplayw,greplaytof,greplaydetid,gseeddata,gdebugdata,gprogress);break;
-	       case hipLaunchKernelGGL(HIP_KERNEL_NAME(110:mcx_main_loop<1,1,0>), dim3(mcgrid), dim3(mcblock), sharedbuf, 0, gmedia,gfield,genergy,gPseed,gPpos,gPdir,gPlen,gPdet,gdetected,gsrcpattern,greplayw,greplaytof,greplaydetid,gseeddata,gdebugdata,gprogress);break;
-	       case hipLaunchKernelGGL(HIP_KERNEL_NAME(111:mcx_main_loop<1,1,1>), dim3(mcgrid), dim3(mcblock), sharedbuf, 0, gmedia,gfield,genergy,gPseed,gPpos,gPdir,gPlen,gPdet,gdetected,gsrcpattern,greplayw,greplaytof,greplaydetid,gseeddata,gdebugdata,gprogress);break;
+	       case 100:hipLaunchKernelGGL(HIP_KERNEL_NAME(mcx_main_loop<1,0,0>), dim3(mcgrid), dim3(mcblock), sharedbuf, 0, gmedia,gfield,genergy,gPseed,gPpos,gPdir,gPlen,gPdet,gdetected,gsrcpattern,greplayw,greplaytof,greplaydetid,gseeddata,gdebugdata,gprogress);break;
+	       case 101:hipLaunchKernelGGL(HIP_KERNEL_NAME(mcx_main_loop<1,0,1>), dim3(mcgrid), dim3(mcblock), sharedbuf, 0, gmedia,gfield,genergy,gPseed,gPpos,gPdir,gPlen,gPdet,gdetected,gsrcpattern,greplayw,greplaytof,greplaydetid,gseeddata,gdebugdata,gprogress);break;
+	       case 110:hipLaunchKernelGGL(HIP_KERNEL_NAME(mcx_main_loop<1,1,0>), dim3(mcgrid), dim3(mcblock), sharedbuf, 0, gmedia,gfield,genergy,gPseed,gPpos,gPdir,gPlen,gPdet,gdetected,gsrcpattern,greplayw,greplaytof,greplaydetid,gseeddata,gdebugdata,gprogress);break;
+	       case 111:hipLaunchKernelGGL(HIP_KERNEL_NAME(mcx_main_loop<1,1,1>), dim3(mcgrid), dim3(mcblock), sharedbuf, 0, gmedia,gfield,genergy,gPseed,gPpos,gPdir,gPlen,gPdet,gdetected,gsrcpattern,greplayw,greplaytof,greplaydetid,gseeddata,gdebugdata,gprogress);break;
            }
 #pragma omp master
 {
