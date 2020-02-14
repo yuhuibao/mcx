@@ -16,7 +16,7 @@ endif
 
 MKDIR      := mkdir
 
-CUDACC=nvcc
+CUDACC=hipcc
 MEX=mex
 AR=$(CC)
 

@@ -27,7 +27,7 @@
 #define _MCEXTREME_UTILITIES_H
 
 #include <stdio.h>
-#include <hip/hip_vector_types.h>
+#include <vector_types.h>
 #include "br2cu.h"
 #include "cjson/cJSON.h"
 #include "float.h"

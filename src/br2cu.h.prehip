@@ -1,4 +1,3 @@
-#include "hip/hip_runtime.h"
 /***************************************************************************//**
 **  \mainpage Monte Carlo eXtreme - GPU accelerated Monte Carlo Photon Migration
 **
@@ -34,13 +33,13 @@ Qianqian Fang <q.fang at neu.edu>
 
 ************************************************************/
 
-#include <hip/hip_runtime.h>
+#include <cuda.h>
 
 #define kernel __global__
-#define streamRead(a,b)  {size_t sy;hipGetSymbolSize(&sy, HIP_SYMBOL(b));printf("ss %d\n",sy);hipMemcpy(a, b[0], sy, \
-hipMemcpyHostToDevice);}
-#define streamWrite(a,b) {size_t sy;hipGetSymbolSize(&sy, HIP_SYMBOL(a));printf("ss %d\n",sy);hipMemcpy(b[0], a, sy, \
-hipMemcpyDeviceToHost);}
+#define streamRead(a,b)  {size_t sy;cudaGetSymbolSize(&sy,b);printf("ss %d\n",sy);cudaMemcpy(a, b[0], sy, \
+cudaMemcpyHostToDevice);}
+#define streamWrite(a,b) {size_t sy;cudaGetSymbolSize(&sy,a);printf("ss %d\n",sy);cudaMemcpy(b[0], a, sy, \
+cudaMemcpyDeviceToHost);}
 #define int2(a,b) make_int2(a,b)                   /**< int2 constructor */
 #define int3(a,b,c) make_int3(a,b,c)               /**< int3 constructor */
 #define uint2(a,b) make_uint2(a,b)                 /**< uint2 constructor */
