@@ -27,7 +27,7 @@ DOXY       := doxygen
 DOCDIR     := $(MCXDIR)/doc
 DOXYCFG=mcxdoxy.cfg
 
-INCLUDEDIRS=-I/usr/local/cuda/include
+INCLUDEDIRS=-I/opt/rocm/hip/include
 
 CUDART=-lcudart -lstdc++
 CUOMPLINK=
