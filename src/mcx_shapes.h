@@ -25,7 +25,7 @@
 #define _MCEXTREME_RASTERIZER_H
 
 #include <hip/hip_vector_types.h>
-
+#include "br2cu.h"
 #ifdef  __cplusplus
 extern "C" {
 #endif

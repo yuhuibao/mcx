@@ -18,7 +18,7 @@ MKDIR      := mkdir
 
 CUDACC=hipcc
 MEX=mex
-AR=$(CC)
+AR=hipcc
 
 BINARY=mcx
 OUTPUT_DIR=$(MCXDIR)/bin
@@ -29,7 +29,6 @@ DOXYCFG=mcxdoxy.cfg
 
 INCLUDEDIRS=-I/opt/rocm/hip/include
 
-CUDART=-lcudart -lstdc++
 CUOMPLINK=
 
 ARCH = $(shell uname -m)
@@ -55,7 +54,7 @@ DLLFLAG=-fPIC
 OMP=-fopenmp
 CUDA_STATIC=--cudart static -Xcompiler "-static-libgcc -static-libstdc++"
 
-CPPOPT=-g -Wall -std=c99 # -DUSE_OS_TIMER
+CPPOPT=-g -Wall -std=c99 -D__HIP_PLATFORM_HCC__  # -DUSE_OS_TIMER
 
 OBJSUFFIX=.o
 EXESUFFIX=

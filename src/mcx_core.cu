@@ -2231,6 +2231,7 @@ is more than what your have specified (%d), please use the -H option to specify 
 
        if(cfg->exportfield){
 	       for(i=0;i<(int)fieldlen;i++)
+#pragma omp critical
                   cfg->exportfield[i]+=field[i];
        }
 
