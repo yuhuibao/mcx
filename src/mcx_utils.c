@@ -502,7 +502,7 @@ void mcx_savedetphoton(float *ppath, void *seeds, int count, int doappend, Confi
  */
 
 void mcx_printlog(Config *cfg, char *str){
-     if(cfg->flog>0){ /*stdout is 1*/
+     if(cfg->flog>(void*)0){ /*stdout is 1*/
          MCX_FPRINTF(cfg->flog,"%s\n",str);
      }
 }
@@ -1172,7 +1172,7 @@ int mcx_loadjson(cJSON *root, Config *cfg){
 	           cfg->steps.x=-2.0f;
 	       else
 	           MCX_ERROR(-1,"Domain::VoxelSize::Dx has incorrect element numbers");
-	       cfg->dx=malloc(sizeof(float)*len);
+	       cfg->dx=(float*)malloc(sizeof(float)*len);
 	       vv=val->child;
 	       for(i=0;i<len;i++){
 	          cfg->dx[i]=vv->valuedouble;
@@ -1188,7 +1188,7 @@ int mcx_loadjson(cJSON *root, Config *cfg){
 	           cfg->steps.y=-2.0f;
 	       else
 	           MCX_ERROR(-1,"Domain::VoxelSize::Dy has incorrect element numbers");
-	       cfg->dy=malloc(sizeof(float)*len);
+	       cfg->dy=(float*)malloc(sizeof(float)*len);
 	       vv=val->child;
 	       for(i=0;i<len;i++){
 	          cfg->dy[i]=vv->valuedouble;
@@ -1204,7 +1204,7 @@ int mcx_loadjson(cJSON *root, Config *cfg){
 	           cfg->steps.z=-2.0f;
 	       else
 	           MCX_ERROR(-1,"Domain::VoxelSize::Dz has incorrect element numbers");
-	       cfg->dz=malloc(sizeof(float)*len);
+	       cfg->dz=(float*)malloc(sizeof(float)*len);
 	       vv=val->child;
 	       for(i=0;i<len;i++){
 	          cfg->dz[i]=vv->valuedouble;
@@ -1379,8 +1379,8 @@ int mcx_loadjson(cJSON *root, Config *cfg){
         if(!flagset['A'])  cfg->autopilot=FIND_JSON_KEY("DoAutoThread","Session.DoAutoThread",Session,cfg->autopilot,valueint);
 	if(!flagset['m'])  cfg->ismomentum=FIND_JSON_KEY("DoDCS","Session.DoDCS",Session,cfg->ismomentum,valueint);
 	if(!flagset['V'])  cfg->isspecular=FIND_JSON_KEY("DoSpecular","Session.DoSpecular",Session,cfg->isspecular,valueint);
-	if(!flagset['D'])  cfg->debuglevel=mcx_parsedebugopt(FIND_JSON_KEY("DebugFlag","Session.DebugFlag",Session,"",valuestring),debugflag);
-	if(!flagset['w'])  cfg->savedetflag=mcx_parsedebugopt(FIND_JSON_KEY("SaveDataMask","Session.SaveDataMask",Session,"",valuestring),saveflag);
+	if(!flagset['D'])  cfg->debuglevel=mcx_parsedebugopt((char *)FIND_JSON_KEY("DebugFlag","Session.DebugFlag",Session,"",valuestring),debugflag);
+	if(!flagset['w'])  cfg->savedetflag=mcx_parsedebugopt((char *)FIND_JSON_KEY("SaveDataMask","Session.SaveDataMask",Session,"",valuestring),saveflag);
 
         if(!cfg->outputformat)  cfg->outputformat=mcx_keylookup((char *)FIND_JSON_KEY("OutputFormat","Session.OutputFormat",Session,"mc2",valuestring),outputformat);
         if(cfg->outputformat<0)
@@ -2176,7 +2176,7 @@ int mcx_parsedebugopt(char *debugopt,const char *debugflag){
 
 int mcx_keylookup(char *origkey, const char *table[]){
     int i=0;
-    char *key=malloc(strlen(origkey)+1);
+    char *key=(char*)malloc(strlen(origkey)+1);
     memcpy(key,origkey,strlen(origkey)+1);
     while(key[i]){
         key[i]=tolower(key[i]);
@@ -2311,10 +2311,10 @@ void mcx_usage(Config *cfg,char *exename){
      printf("\n\
 usage: %s <param1> <param2> ...\n\
 where possible parameters include (the first value in [*|*] is the default)\n\
-\n"S_BOLD S_CYAN"\
+\n" S_BOLD S_CYAN"\
 == Required option ==\n" S_RESET"\
  -f config     (--input)       read an input file in .json or .inp format\n\
-\n"S_BOLD S_CYAN"\
+\n" S_BOLD S_CYAN"\
 == MC options ==\n" S_RESET"\
  -n [0|int]    (--photon)      total photon number (exponential form accepted)\n\
                                max accepted value:9.2234e+18 on 64bit systems\n\
@@ -2349,7 +2349,7 @@ where possible parameters include (the first value in [*|*] is the default)\n\
  -V [0|1]      (--specular)    1 source located in the background,0 inside mesh\n\
  -e [0.|float] (--minenergy)   minimum energy level to terminate a photon\n\
  -g [1|int]    (--gategroup)   number of time gates per run\n\
-\n"S_BOLD S_CYAN"\
+\n" S_BOLD S_CYAN"\
 == GPU options ==\n" S_RESET"\
  -L            (--listgpu)     print GPU information only\n\
  -t [16384|int](--thread)      total thread number\n\
@@ -2360,7 +2360,7 @@ where possible parameters include (the first value in [*|*] is the default)\n\
  -G '1101'     (--gpu)         using multiple devices (1 enable, 0 disable)\n\
  -W '50,30,20' (--workload)    workload for active devices; normalized by sum\n\
  -I            (--printgpu)    print GPU information and run program\n\
-\n"S_BOLD S_CYAN"\
+\n" S_BOLD S_CYAN"\
 == Input options ==\n" S_RESET"\
  -P '{...}'    (--shapes)      a JSON string for additional shapes in the grid\n\
  -K [1|int|str](--mediabyte)   volume data format, use either a number or a str\n\
@@ -2373,7 +2373,7 @@ where possible parameters include (the first value in [*|*] is the default)\n\
 			     103 or asgn_byte: 4x byte gray-levels for mua/s/g/n\n\
 			     104 or muamus_short: 2x short gray-levels for mua/s\n\
  -a [0|1]      (--array)       1 for C array (row-major); 0 for Matlab array\n\
-\n"S_BOLD S_CYAN"\
+\n" S_BOLD S_CYAN"\
 == Output options ==\n" S_RESET"\
  -s sessionid  (--session)     a string to label all output file names\n\
  -O [X|XFEJPM] (--outputtype)  X - output flux, F - fluence, E - energy deposit\n\
@@ -2408,13 +2408,13 @@ where possible parameters include (the first value in [*|*] is the default)\n\
                                nii - Nifti format\n\
                                hdr - Analyze 7.5 hdr/img format\n\
                                tx3 - GL texture data for rendering (GL_RGBA32F)\n\
-\n"S_BOLD S_CYAN"\
+\n" S_BOLD S_CYAN"\
 == User IO options ==\n" S_RESET"\
  -h            (--help)        print this message\n\
  -v            (--version)     print MCX revision number\n\
  -l            (--log)         print messages to a log file instead\n\
  -i 	       (--interactive) interactive mode\n\
-\n"S_BOLD S_CYAN"\
+\n" S_BOLD S_CYAN"\
 == Debug options ==\n" S_RESET"\
  -D [0|int]    (--debug)       print debug information (you can use an integer\n\
   or                           or a string by combining the following flags)\n\
@@ -2422,7 +2422,7 @@ where possible parameters include (the first value in [*|*] is the default)\n\
     /case insensitive/         2 M  store photon trajectory info\n\
                                4 P  print progress bar\n\
       combine multiple items by using a string, or add selected numbers together\n\
-\n"S_BOLD S_CYAN"\
+\n" S_BOLD S_CYAN"\
 == Additional options ==\n" S_RESET"\
  --root         [''|string]    full path to the folder storing the input files\n\
  --gscatter     [1e9|int]      after a photon completes the specified number of\n\
@@ -2436,15 +2436,15 @@ where possible parameters include (the first value in [*|*] is the default)\n\
                                use this parameter to set the maximum positions\n\
                                stored (default: 1e7)\n\
  --faststep [0|1]              1-use fast 1mm stepping, [0]-precise ray-tracing\n\
-\n"S_BOLD S_CYAN"\
+\n" S_BOLD S_CYAN"\
 == Example ==\n" S_RESET"\
-example: (autopilot mode)\n"S_GREEN"\
+example: (autopilot mode)\n" S_GREEN"\
        %s -A 1 -n 1e7 -f input.inp -G 1 -D P\n" S_RESET"\
-or (manual mode)\n"S_GREEN"\
+or (manual mode)\n" S_GREEN"\
        %s -t 16384 -T 64 -n 1e7 -f input.inp -s test -r 2 -g 10 -d 1 -w dpx -b 1 -G 1\n" S_RESET"\
-or (use multiple devices - 1st,2nd and 4th GPUs - together with equal load)\n"S_GREEN"\
+or (use multiple devices - 1st,2nd and 4th GPUs - together with equal load)\n" S_GREEN"\
        %s -A -n 1e7 -f input.inp -G 1101 -W 10,10,10\n" S_RESET"\
-or (use inline domain definition)\n"S_GREEN"\
+or (use inline domain definition)\n" S_GREEN"\
        %s -f input.json -P '{\"Shapes\":[{\"ZLayers\":[[1,10,1],[11,30,2],[31,60,3]]}]}'" S_RESET"\n",
               exename,exename,exename,exename,exename);
 }
