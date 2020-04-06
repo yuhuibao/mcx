@@ -16,7 +16,7 @@ uses
   SynHighlighterAny, SynHighlighterPerl, synhighlighterunixshellscript, LclIntf,
   LResources, Forms, Controls, Graphics, Dialogs, StdCtrls, Menus, ComCtrls,
   ExtCtrls, Spin, EditBtn, Buttons, ActnList, lcltype, AsyncProcess, Grids,
-  CheckLst, LazHelpHTML, ValEdit, inifiles, fpjson, jsonparser, runssh,
+  CheckLst, LazHelpHTML, ValEdit, inifiles, fpjson, jsonparser {$IFDEF USE_SYNAPSE}, runssh{$ENDIF},
   strutils, RegExpr, OpenGLTokens, mcxabout, mcxshape, mcxnewsession, mcxsource,
   mcxrender, mcxview, mcxconfig, mcxstoprun, Types {$IFDEF WINDOWS}, registry, ShlObj{$ENDIF};
 
@@ -79,6 +79,9 @@ type
     MenuItem66: TMenuItem;
     MenuItem67: TMenuItem;
     MenuItem68: TMenuItem;
+    MenuItem69: TMenuItem;
+    MenuItem70: TMenuItem;
+    MenuItem71: TMenuItem;
     miClearLog: TMenuItem;
     miCopy: TMenuItem;
     mmOutput: TSynEdit;
@@ -414,9 +417,12 @@ type
     MapList, ConfigData, JSONstr, PassList : TStringList;
     JSONdata : TJSONData;
     RegEngine:TRegExpr;
+    {$IFDEF USE_SYNAPSE}
     sshrun: TSSHThread;
+    {$ENDIF}
     function CreateCmd(proc: TProcess=nil):AnsiString;
     function CreateCmdOnly:AnsiString;
+    function SKey(str: AnsiString):AnsiString;
     procedure VerifyInput;
     procedure AddLog(str:AnsiString);
     procedure AddMultiLineLog(str:AnsiString; Sender: TObject);
@@ -543,13 +549,13 @@ begin
     node:=CurrentSession;
     if(Sender is TSpinEdit) then begin
        se:=Sender as TSpinEdit;
-       idx:=MapList.IndexOf(se.Hint);
+       idx:=MapList.IndexOf(SKey(se.Hint));
        if(idx>=0) then
                   node.SubItems.Strings[idx]:=IntToStr(se.Value);
     end else if(Sender is TEdit) then begin
        ed:=Sender as TEdit;
-       idx:=MapList.IndexOf(ed.Hint);
-       if(ed.Hint = 'Session') then  begin
+       idx:=MapList.IndexOf(SKey(ed.Hint));
+       if(SKey(ed.Hint) = 'Session') then  begin
          node.Caption:=ed.Text;
          Caption:='MCX Studio - ['+node.Caption+']';
        end;
@@ -557,44 +563,44 @@ begin
                   node.SubItems.Strings[idx]:=ed.Text;
     end else if(Sender is TRadioGroup) then begin
        gr:=Sender as TRadioGroup;
-       idx:=MapList.IndexOf(gr.Hint);
+       idx:=MapList.IndexOf(SKey(gr.Hint));
        if(idx>=0) then
                   node.SubItems.Strings[idx]:=IntToStr(gr.ItemIndex);
     end else if(Sender is TComboBox) then begin
        cb:=Sender as TComboBox;
-       idx:=MapList.IndexOf(cb.Hint);
+       idx:=MapList.IndexOf(SKey(cb.Hint));
        if(idx>=0) then
                   node.SubItems.Strings[idx]:=cb.Text;
     end else if(Sender is TCheckBox) then begin
        ck:=Sender as TCheckBox;
-       idx:=MapList.IndexOf(ck.Hint);
+       idx:=MapList.IndexOf(SKey(ck.Hint));
        if(idx>=0) then
                   node.SubItems.Strings[idx]:=IntToStr(Integer(ck.Checked));
-       if(ck.Hint='Autopilot') then begin
+       if(SKey(ck.Hint)='Autopilot') then begin
            edThread.Enabled:=not ck.Checked;
            edBlockSize.Enabled:=not ck.Checked;
        end;
-       if(ck.Hint='SaveSeed') or (ck.Hint='SaveExit') then begin
+       if(SKey(ck.Hint)='SaveSeed') or (SKey(ck.Hint)='SaveExit') then begin
            ckSaveDetector.Checked:=true;
        end;
-       if(ck.Hint='ShowProgress') then begin
+       if(SKey(ck.Hint)='ShowProgress') then begin
            ckbDebug.Checked[2]:=ck.Checked;
        end;
-       if(ck.Hint='DoReflect') then begin
+       if(SKey(ck.Hint)='DoReflect') then begin
            grBC.Enabled:=not ck.Checked;
        end;
-       if(ck.Hint='SaveDetector') then begin
+       if(SKey(ck.Hint)='SaveDetector') then begin
            edDetectedNum.Enabled:=ck.Checked;
            mcxdoDownloadMCH.Enabled:=ck.Checked;
            ckbDet.Enabled:=ck.Checked;
        end;
-       if(ck.Hint='DoSaveMask') then begin
+       if(SKey(ck.Hint)='DoSaveMask') then begin
            mcxdoDownloadMask.Enabled:=ck.Checked;
        end;
-       if(ck.Hint='DoReplay') then begin
+       if(SKey(ck.Hint)='DoReplay') then begin
            edReplayDet.Enabled:=ck.Checked;
        end;
-       if(ck.Hint='DoRemote') then begin
+       if(SKey(ck.Hint)='DoRemote') then begin
            edRemote.Enabled:=ck.Checked;
            ckSharedFS.Enabled:=ck.Checked;
            if(ck.Checked) then
@@ -603,30 +609,30 @@ begin
               mcxdoQuery.Enabled:=(SearchForExe(CreateCmdOnly) <> '');
            mcxdoDownloadMC2.Enabled:=ck.Checked and (not ckSharedFS.Checked);
        end;
-       if(ck.Hint='DoSharedFS') then begin
+       if(SKey(ck.Hint)='DoSharedFS') then begin
            mcxdoDownloadMC2.Enabled:=(not ck.Checked) and (ckDoRemote.Checked);
        end;
     end else if(Sender is TCheckListBox) then begin
        ckb:=Sender as TCheckListBox;
-       idx:=MapList.IndexOf(ckb.Hint);
+       idx:=MapList.IndexOf(SKey(ckb.Hint));
        if(idx>=0) then begin
            node.SubItems.Strings[idx]:=CheckListToStr(ckb);
        end;
-       if(ckb.Hint='DebugFlags') then
+       if(SKey(ckb.Hint)='DebugFlags') then
            ckShowProgress.Checked:=ckb.Checked[2];
     end else if(Sender is TFileNameEdit) then begin
        fed:=Sender as TFileNameEdit;
-       idx:=MapList.IndexOf(fed.Hint);
+       idx:=MapList.IndexOf(SKey(fed.Hint));
        if(idx>=0) then
                   node.SubItems.Strings[idx]:=fed.Text;
     end else if(Sender is TStringGrid) then begin
        sg:=Sender as TStringGrid;
-       idx:=MapList.IndexOf(sg.Hint);
+       idx:=MapList.IndexOf(SKey(sg.Hint));
        if(idx>=0) then
              node.SubItems.Strings[idx]:=GridToStr(sg);
     end else if(Sender is TTreeView) then begin
        tv:=Sender as TTreeView;
-       idx:=MapList.IndexOf(tv.Hint);
+       idx:=MapList.IndexOf(SKey(tv.Hint));
        if(idx>=0) and (tv.Name='tvShapes') then  begin
            ss:= JSONData.AsJSON;
            if(JSONData.FindPath('Shapes') <> nil) then begin
@@ -834,8 +840,11 @@ begin
       sgConfig.Cols[2].CommaText:=ConfigData.CommaText;
       sgConfig.FixedCols:=2;
       sgConfig.FixedRows:=1;
-
+{$IFDEF USE_SYNAPSE}
       edRemote.ItemIndex:=0;
+{$ELSE}
+      edRemote.ItemIndex:=1;
+{$ENDIF}
       ckDoRemote.Checked:=false;
       ckSharedFS.Checked:=false;
       grBC.Enabled:=false;
@@ -855,9 +864,11 @@ begin
       if(grProgram.ItemIndex=1) then begin
           sgConfig.Rows[1].CommaText:='Domain,MeshID,';
           sgConfig.Rows[2].CommaText:='Domain,InitElem,';
+          sgConfig.Rows[3].CommaText:='Session,RayTracer,g - Dual-grid MMC';
       end else begin
           sgConfig.Rows[1].CommaText:='Domain,VolumeFile,"See Volume Designer..."';
           sgConfig.Rows[2].CommaText:='Domain,Dim,"[60,60,60]"';
+          sgConfig.Rows[3].CommaText:='Domain,MediaFormat,byte - 1 byte integer';
       end;
       LoadJSONShapeTree('[{"Grid":{"Tag":1,"Size":[60,60,60]}}]');
       if not (CurrentSession = nil) then
@@ -1012,32 +1023,36 @@ procedure TfmMCX.grProgramSelectionChanged(Sender: TObject);
 begin
   case grProgram.ItemIndex of
     0, 2: begin
-        grGPU.Top:=grProgram.Height+grBasic.Height;
-        grGPU.Visible:=true;
+        //grGPU.Top:=grProgram.Height+grBasic.Height;
+        //grGPU.Visible:=true;
         tabVolumeDesigner.Enabled:=true;
         ckSpecular.Visible:=true;
-        ckSaveRef.Visible:=true;
+        //ckSaveRef.Visible:=true;
         edRespin.Hint:='RespinNum';
         lbRespin.Caption:='Split into runs (-r)';
         edBubble.Hint:='BubbleSize';
         lbBubble.Caption:='Cache radius from src (-R)';
-        mcxdoQuery.Enabled:=true;
+        //mcxdoQuery.Enabled:=true;
+        ckSrcFrom0.Visible:=true;
+        ckSaveMask.Visible:=true;
         edOutputFormat.ItemIndex:=1;
         grArray.Enabled:=true;
         edGate.Enabled:=true;
         edDetectedNum.Enabled:=true;
     end;
     1: begin
-        grGPU.Visible:=false;
+        //grGPU.Visible:=false;
         tabVolumeDesigner.Enabled:=false;
         ckSpecular.Visible:=true;
-        ckSaveRef.Visible:=false;
+        //ckSaveRef.Visible:=false;
         edOutputFormat.ItemIndex:=4;
         edRespin.Hint:='BasicOrder';
         lbRespin.Caption:='Element order (-C)';
         edBubble.Hint:='DebugPhoton';
         lbBubble.Caption:='Debug photon index';
-        mcxdoQuery.Enabled:=false;
+        //mcxdoQuery.Enabled:=false;
+        ckSrcFrom0.Visible:=false;
+        ckSaveMask.Visible:=false;
         grArray.Enabled:=false;
         edGate.Enabled:=false;
         edDetectedNum.Enabled:=false;
@@ -1046,9 +1061,11 @@ begin
   if(grProgram.ItemIndex=1) then begin
         sgConfig.Rows[1].CommaText:='Domain,MeshID,';
         sgConfig.Rows[2].CommaText:='Domain,InitElem,';
+        sgConfig.Rows[3].CommaText:='Session,RayTracer,g - Dual-grid MMC';
   end else begin
         sgConfig.Rows[1].CommaText:='Domain,VolumeFile,"See Volume Designer..."';
         sgConfig.Rows[2].CommaText:='Domain,Dim,"[60,60,60]"';
+        sgConfig.Rows[3].CommaText:='Domain,MediaFormat,byte - 1 byte integer';
   end;
   if(CurrentSession <> nil) then
       CurrentSession.ImageIndex:=grProgram.ItemIndex+3;
@@ -1287,7 +1304,7 @@ begin
                4:  fmViewer.LoadTexture(outputfile,nx,ny,nz,2,352,GL_RGBA16I);
           else
           end;
-          fmViewer.FormStyle:=fsStayOnTop;
+          fmViewer.BringToFront;
           fmViewer.Show;
     except
         on E: Exception do
@@ -1307,12 +1324,14 @@ begin
             pass:=PasswordBox('SSH','Plese type your SSH password');
             PassList.Values[url]:=pass;
     end;
+{$IFDEF USE_SYNAPSE}
     sshrun := TSSHThread.Create(host,fmConfig.edPort.Text,username,pass,cmd,doprogress,@pMCXTerminate,true);
     sshrun.isupdategpu:=updategpu;
     sshrun.OutputMemo:=mmOutput;
     sshrun.sbInfo:=sbInfo;
     sshrun.ProgressBar:=fmStop.pbProgress;
     sshrun.Resume;
+{$ENDIF}
 end;
 
 procedure TfmMCX.mcxdoQueryExecute(Sender: TObject);
@@ -1325,6 +1344,7 @@ begin
     if(ResetMCX(0)) then begin
           AddLog('"-- Run Command --"');
           if(ckDoRemote.Checked) then begin
+{$IFDEF USE_SYNAPSE}
               if(edRemote.ItemIndex=0) then
               begin
                 url:=fmConfig.cbHost.Text;
@@ -1338,6 +1358,7 @@ begin
                 RunSSHCmd(Sender, cmd, true, false);
                 exit;
               end;
+{$ENDIF}
               url:=ExpandPassword(edRemote.Text);
               if(sscanf(url,'%s',[@cmd])=1) then begin
                   pMCX.CommandLine:='"'+SearchForExe(cmd)+'"'+
@@ -1444,12 +1465,12 @@ begin
 
         UpdateMCXActions(acMCX,'Run','');
         mcxdoRun.Tag:=ptrint(GetTickCount64);
-
+{$IFDEF USE_SYNAPSE}
         if(edRemote.ItemIndex=0) then
         begin
           url:=fmConfig.cbHost.Text;
           cmd:=fmConfig.edUserName.Text;
-          if(url.IsEmpty) or (cmd.IsEmpty) then begin
+          if ckDoRemote.Checked and ( (url.IsEmpty) or (cmd.IsEmpty) ) then begin
              if(MessageDlg('Question', 'You have not set up remote server information. Do you want to set now?', mtWarning,
                  [mbYes, mbNo, mbCancel],0) <> mrYes) then exit;
              mcxdoConfigExecute(Sender);
@@ -1457,6 +1478,7 @@ begin
           RunSSHCmd(Sender, fullcmd, false, ckbDebug.Checked[2]);
           exit;
         end;
+{$ENDIF}
 
         {$IFDEF DARWIN}
         AProcess := TProcess.Create(nil);
@@ -1525,10 +1547,12 @@ end;
 
 procedure TfmMCX.mcxdoStopExecute(Sender: TObject);
 begin
+{$IFDEF USE_SYNAPSE}
      if(ckDoRemote.Checked) and (sshrun<>nil) then
      begin
           sshrun.Terminate;
      end else if(pMCX.Running) then
+{$ENDIF}
      begin
        pMCX.Terminate(0);
      end;
@@ -1626,8 +1650,9 @@ begin
     fmStop.FormStyle:=fsStayOnTop;
 
     CurrentSession:=nil;
+{$IFDEF USE_SYNAPSE}
     sshrun:=nil;
-
+{$ENDIF}
     PassList:=TStringList.Create();
     MapList:=TStringList.Create();
     MapList.Clear;
@@ -1892,8 +1917,10 @@ end;
 
 procedure TfmMCX.pMCXTerminate(Sender: TObject);
 begin
+  {$IFDEF USE_SYNAPSE}
      if (ckDoRemote.Checked) and (sshrun<>nil) and (sshrun.isupdategpu) then
          UpdateGPUList(sshrun.FullLog);
+  {$ENDIF}
      if(not mcxdoStop.Enabled) then exit;
      if(Sender <> nil) and (Sender is TAsyncProcess) then
          AddMultiLineLog(GetMCXOutput(Sender), Sender);
@@ -2019,16 +2046,28 @@ procedure TfmMCX.sgConfigSelectEditor(Sender: TObject; aCol, aRow: Integer;
   var Editor: TWinControl);
 begin
    if (aCol=2) and (aRow=3) then begin
-     Editor := sgConfig.EditorByStyle(cbsPickList);
-     TCustomComboBox(Editor).Items.Clear;
-     TCustomComboBox(Editor).Items.Add('byte - 1-byte integer');
-     TCustomComboBox(Editor).Items.Add('short - 2-byte integer');
-     TCustomComboBox(Editor).Items.Add('integer - 4-byte integer');
-     TCustomComboBox(Editor).Items.Add('muamus_float - per voxel mua/mus in float');
-     TCustomComboBox(Editor).Items.Add('mua_float - per voxel mua in float');
-     TCustomComboBox(Editor).Items.Add('muamus_half - per voxel mua/mus in half-float');
-     TCustomComboBox(Editor).Items.Add('asgn_byte - per voxel mua/mus/g/n grayscale in byte');
-     TCustomComboBox(Editor).Items.Add('muamus_short - per voxel mua/mus grayscale in short');
+     if(grProgram.ItemIndex=1) then begin
+       Editor := sgConfig.EditorByStyle(cbsPickList);
+       TCustomComboBox(Editor).Items.Clear;
+       TCustomComboBox(Editor).Items.Add('p - Plucker ray-tracer');
+       TCustomComboBox(Editor).Items.Add('h - Havel ray-tracer');
+       TCustomComboBox(Editor).Items.Add('b - Badouel ray-tracer');
+       TCustomComboBox(Editor).Items.Add('s - Branchless Badouel ray-tracer');
+       TCustomComboBox(Editor).Items.Add('g - Dual-grid MMC');
+     end else begin
+         Editor := sgConfig.EditorByStyle(cbsPickList);
+         TCustomComboBox(Editor).Items.Clear;
+         TCustomComboBox(Editor).Items.Add('byte - 1-byte integer');
+         TCustomComboBox(Editor).Items.Add('short - 2-byte integer');
+         TCustomComboBox(Editor).Items.Add('integer - 4-byte integer');
+         TCustomComboBox(Editor).Items.Add('mixlabel - mix ratio of two labels at boundary');
+         TCustomComboBox(Editor).Items.Add('labelplus - labels plus one continuous component');
+         TCustomComboBox(Editor).Items.Add('muamus_float - per voxel mua/mus in float');
+         TCustomComboBox(Editor).Items.Add('mua_float - per voxel mua in float');
+         TCustomComboBox(Editor).Items.Add('muamus_half - per voxel mua/mus in half-float');
+         TCustomComboBox(Editor).Items.Add('asgn_byte - per voxel mua/mus/g/n grayscale in byte');
+         TCustomComboBox(Editor).Items.Add('muamus_short - per voxel mua/mus grayscale in short');
+     end;
    end;
 end;
 
@@ -2819,7 +2858,7 @@ begin
                   end else if(key='InitElem') then begin
                      json.Objects[section].Integers[key]:=StrToInt(val);
                      continue;
-                  end else if(key='MediaFormat') then begin
+                  end else if(key='MediaFormat') or (key='RayTracer') then begin
                      if(sscanf(val,'%s',[@formatid])=1) then
                         json.Objects[section].Strings[key]:=formatid;
                      continue;
@@ -2967,8 +3006,7 @@ begin
         nphoton:=StrToFloat(edPhoton.Text);
         nblock:=StrToInt(edBlockSize.Text);
         bubbleradius:=StrToFloat(edBubble.Text);
-        if(grProgram.ItemIndex <>1) then
-            gpuid:=CheckListToStr(edGPUID);
+        gpuid:=CheckListToStr(edGPUID);
         unitinmm:=StrToFloat(edUnitInMM.Text);
         hitmax:=StrToInt(edDetectedNum.Text);
         if not (ckDoReplay.Checked) then
@@ -2978,7 +3016,7 @@ begin
         exit;
     end;
 
-    if(grProgram.ItemIndex <>1) then begin
+    if(true) then begin
         param.Add('--gpu');
         param.Add(gpuid);
         if(ckAutopilot.Checked) then begin
@@ -3265,43 +3303,43 @@ begin
         try
         if(gb.Controls[id] is TSpinEdit) then begin
            se:=gb.Controls[id] as TSpinEdit;
-           idx:=MapList.IndexOf(se.Hint);
+           idx:=MapList.IndexOf(SKey(se.Hint));
            if(idx>=0) then node.SubItems.Strings[idx]:=IntToStr(se.Value);
            continue;
         end;
         if(gb.Controls[id] is TEdit) then begin
            ed:=gb.Controls[id] as TEdit;
-           idx:=MapList.IndexOf(ed.Hint);
+           idx:=MapList.IndexOf(SKey(ed.Hint));
            if(idx>=0) then node.SubItems.Strings[idx]:=ed.Text;
            continue;
         end;
         if(gb.Controls[id] is TRadioGroup) then begin
            gr:=gb.Controls[id] as TRadioGroup;
-           idx:=MapList.IndexOf(gr.Hint);
+           idx:=MapList.IndexOf(SKey(gr.Hint));
            if(idx>=0) then node.SubItems.Strings[idx]:=IntToStr(gr.ItemIndex);
            continue;
         end;
         if(gb.Controls[id] is TComboBox) then begin
            cb:=gb.Controls[id] as TComboBox;
-           idx:=MapList.IndexOf(cb.Hint);
+           idx:=MapList.IndexOf(SKey(cb.Hint));
            if(idx>=0) then node.SubItems.Strings[idx]:=cb.Text;
            continue;
         end;
         if(gb.Controls[id] is TCheckBox) then begin
            ck:=gb.Controls[id] as TCheckBox;
-           idx:=MapList.IndexOf(ck.Hint);
+           idx:=MapList.IndexOf(SKey(ck.Hint));
            if(idx>=0) then node.SubItems.Strings[idx]:=IntToStr(Integer(ck.Checked));
            continue;
         end;
         if(gb.Controls[id] is TCheckListBox) then begin
            ckb:=gb.Controls[id] as TCheckListBox;
-           idx:=MapList.IndexOf(ckb.Hint);
+           idx:=MapList.IndexOf(SKey(ckb.Hint));
            if(idx>=0) then node.SubItems.Strings[idx]:=CheckListToStr(ckb);
            continue;
         end;
         if(gb.Controls[id] is TValueListEditor) then begin
            vl:=gb.Controls[id] as TValueListEditor;
-           idx:=MapList.IndexOf(vl.Hint);
+           idx:=MapList.IndexOf(SKey(vl.Hint));
            if(idx>=0) then node.SubItems.Strings[idx]:=vl.Strings.CommaText;
            continue;
         end;
@@ -3314,14 +3352,14 @@ begin
         try
           if(tabInputData.Controls[i] is TStringGrid) then begin
              sg:=tabInputData.Controls[i] as TStringGrid;
-             idx:=MapList.IndexOf(sg.Hint);
+             idx:=MapList.IndexOf(SKey(sg.Hint));
              if(idx>=0) then node.SubItems.Strings[idx]:=GridToStr(sg);
              continue;
           end;
         finally
         end;
     end;
-    idx:=MapList.IndexOf(tvShapes.Hint);
+    idx:=MapList.IndexOf(SKey(tvShapes.Hint));
     if(idx>=0) then
       if(JSONData.FindPath('Shapes') <> nil) then begin
         tvShapes.Tag:=UpdateShapeTag(JSONData.FindPath('Shapes'));
@@ -3355,7 +3393,7 @@ begin
     begin
       if(plSetting.Controls[i] is TRadioGroup) then begin
            gr:=plSetting.Controls[i] as TRadioGroup;
-           idx:=MapList.IndexOf(gr.Hint);
+           idx:=MapList.IndexOf(SKey(gr.Hint));
            if(idx>=0) and (Length(node.SubItems.Strings[idx])>0) then begin
                 try
                       gr.ItemIndex:=StrToInt(node.SubItems.Strings[idx]);
@@ -3369,7 +3407,7 @@ begin
        for id:=0 to gb.ControlCount-1 do begin
         if(gb.Controls[id] is TSpinEdit) then begin
            se:=gb.Controls[id] as TSpinEdit;
-           idx:=MapList.IndexOf(se.Hint);
+           idx:=MapList.IndexOf(SKey(se.Hint));
            if(idx>=0) then begin
              if(Length(node.SubItems.Strings[idx])>0) then begin
                 try
@@ -3382,20 +3420,20 @@ begin
         end;
         if(gb.Controls[id] is TEdit) then begin
            ed:=gb.Controls[id] as TEdit;
-           idx:=MapList.IndexOf(ed.Hint);
+           idx:=MapList.IndexOf(SKey(ed.Hint));
            if(idx>=0) then ed.Text:=node.SubItems.Strings[idx];
            continue;
         end;
         if(gb.Controls[id] is TFileNameEdit) then begin
            fed:=gb.Controls[id] as TFileNameEdit;
-           idx:=MapList.IndexOf(fed.Hint);
+           idx:=MapList.IndexOf(SKey(fed.Hint));
            if(idx>=0) then fed.Text:=node.SubItems.Strings[idx];
            continue;
         end;
         if(gb.Controls[id] is TValueListEditor) then begin
            vl:=gb.Controls[id] as TValueListEditor;
-           idx:=MapList.IndexOf(vl.Hint);
-           if(vl.Hint='Boundary') then
+           idx:=MapList.IndexOf(SKey(vl.Hint));
+           if(SKey(vl.Hint)='Boundary') then
            begin
                slist:=TStringList.Create;
                slist.CommaText:=node.SubItems.Strings[idx];
@@ -3413,7 +3451,7 @@ begin
         end;
         if(gb.Controls[id] is TRadioGroup) then begin
            gr:=gb.Controls[id] as TRadioGroup;
-           idx:=MapList.IndexOf(gr.Hint);
+           idx:=MapList.IndexOf(SKey(gr.Hint));
            if(idx>=0) and (Length(node.SubItems.Strings[idx])>0) then begin
                 try
                       gr.ItemIndex:=StrToInt(node.SubItems.Strings[idx]);
@@ -3424,9 +3462,9 @@ begin
         end;
         if(gb.Controls[id] is TComboBox) then begin
            cb:=gb.Controls[id] as TComboBox;
-           if(Length(cb.Hint)=0) then continue;
-           idx:=MapList.IndexOf(cb.Hint);
-           if(idx>=0) and (cb.Hint='RemoteCmd') then begin
+           if(Length(SKey(cb.Hint))=0) then continue;
+           idx:=MapList.IndexOf(SKey(cb.Hint));
+           if(idx>=0) and (SKey(cb.Hint)='RemoteCmd') then begin
                if not (ckLockGPU.Checked) then begin
                    cb.Text:=node.SubItems.Strings[idx];
                end;
@@ -3442,9 +3480,9 @@ begin
         end;
         if(gb.Controls[id] is TCheckBox) then begin
            ck:=gb.Controls[id] as TCheckBox;
-           if(Length(ck.Hint)=0) then continue;
-           idx:=MapList.IndexOf(ck.Hint);
-           if(idx>=0) and ((ck.Hint='DoRemote') or (ck.Hint='DoSharedFS')) then begin
+           if(Length(SKey(ck.Hint))=0) then continue;
+           idx:=MapList.IndexOf(SKey(ck.Hint));
+           if(idx>=0) and ((SKey(ck.Hint)='DoRemote') or (SKey(ck.Hint)='DoSharedFS')) then begin
                if not (ckLockGPU.Checked) then begin
                    ck.Checked:=(node.SubItems.Strings[idx]='1');
                end;
@@ -3456,10 +3494,10 @@ begin
         end;
         if(gb.Controls[id] is TCheckListBox) then begin
            ckb:=gb.Controls[id] as TCheckListBox;
-           idx:=MapList.IndexOf(ckb.Hint);
+           idx:=MapList.IndexOf(SKey(ckb.Hint));
            if(idx>=0) then begin
              ss:= node.SubItems.Strings[idx];
-             if(ckb.Hint='GPUID') then begin
+             if(SKey(ckb.Hint)='GPUID') then begin
                if(not ckLockGPU.Checked) then begin
                    ckb.Items.Clear;
                    for j:=0 to Length(node.SubItems.Strings[idx])-1 do begin
@@ -3468,7 +3506,7 @@ begin
                            ckb.Checked[j]:=true;
                    end;
                end;
-             end else if(ckb.Hint='DebugFlags') or (ckb.Hint='SaveDetFlag') then begin
+             end else if(SKey(ckb.Hint)='DebugFlags') or (SKey(ckb.Hint)='SaveDetFlag') then begin
                ckb.CheckAll(cbUnchecked);
                for j:=0 to Min(ckb.Items.Count, Length(node.SubItems.Strings[idx]))-1 do begin
                    if(ss[j+1]='1') then
@@ -3486,7 +3524,7 @@ begin
         try
           if(tabInputData.Controls[i] is TStringGrid) then begin
              sg:=tabInputData.Controls[i] as TStringGrid;
-             idx:=MapList.IndexOf(sg.Hint);
+             idx:=MapList.IndexOf(SKey(sg.Hint));
              if(idx>=0) then begin
                  if((sg.Name='sgMedia') or (sg.Name='sgDet') ) then begin
                      sg.RowCount:=1;
@@ -3499,9 +3537,15 @@ begin
         finally
         end;
     end;
-    idx:=MapList.IndexOf(tvShapes.Hint);
+    idx:=MapList.IndexOf(SKey(tvShapes.Hint));
     if(idx>=0) then
         LoadJSONShapeTree(node.SubItems.Strings[idx]);
+end;
+
+function TfmMCX.SKey(str: AnsiString):AnsiString;
+begin
+  if(sscanf(str,'%s',[@SKey])<>1) then
+      SKey:='';
 end;
 initialization
   {$I mcxgui.lrs}

@@ -1,7 +1,7 @@
 object fmMCX: TfmMCX
-  Left = 2110
+  Left = 2119
   Height = 849
-  Top = 130
+  Top = 51
   Width = 1288
   ActiveControl = lvJobs
   Align = alTop
@@ -157,7 +157,7 @@ object fmMCX: TfmMCX
   OnResize = FormShow
   OnShow = FormShow
   Position = poScreenCenter
-  LCLVersion = '2.0.2.0'
+  LCLVersion = '2.0.6.0'
   object ToolBar1: TToolBar
     Left = 0
     Height = 119
@@ -587,7 +587,7 @@ object fmMCX: TfmMCX
         object sgMedia: TStringGrid
           Left = 0
           Height = 91
-          Hint = 'MediaCfg'
+          Hint = 'MediaCfg '#10#10'This table defines the optical properties for all needed tissue labels.'#10#10'The first row (label 0) is reserved for the background medium - which includes'#10'the space outside the bounding box of the volume, as well as any voxels with'#10'a zero-value.'#10#10'One can select a row and copy/paste to other rows.'#10#10'If more labels are needed, move to the bottom of the table, and press "down"'#10'arrow key to create a new row below.'
           Top = 18
           Width = 355
           HelpType = htKeyword
@@ -597,22 +597,18 @@ object fmMCX: TfmMCX
           Color = clWhite
           Columns = <          
             item
-              MaxSize = 200
               Title.Caption = 'μa (1/mm)'
               Width = 69
             end          
             item
-              MaxSize = 200
               Title.Caption = 'μs (1/mm)'
               Width = 64
             end          
             item
-              MaxSize = 200
               Title.Caption = 'g (anisotropy)'
               Width = 63
             end          
             item
-              MaxSize = 200
               Title.Caption = 'n (reflective index)'
               Width = 70
             end>
@@ -623,6 +619,7 @@ object fmMCX: TfmMCX
           ParentFont = False
           ParentShowHint = False
           RowCount = 20
+          ShowHint = True
           TabOrder = 1
           TitleFont.Color = clBlack
           TitleImageList = ImageList1
@@ -670,7 +667,7 @@ object fmMCX: TfmMCX
         object sgDet: TStringGrid
           Left = 0
           Height = 76
-          Hint = 'DetectorCfg'
+          Hint = 'DetectorCfg '#10#10'This table defines all detectors in the domain. '#10#10'Please note that currently MCX/MMC only supports spherical detectors,'#10'defined by the [x,y,z] center position and radius (radius).'#10#10'Please also note that photon detection only happens before a photon is'#10'terminated, i.e. when it escapes the exterior bounding box or moving from'#10'a non-zero voxel to a zero voxel. Therefore, a detector''s aperature is the'#10'actual bounding box surface or the surface of the non-zero voxels truncated'#10'by a sphere centered at [x,y,z] with raidus r.'#10#10'Detector position is sensitive to the "Origin from [0 0 0] -z" flag.'
           Top = 132
           Width = 355
           HelpType = htKeyword
@@ -685,6 +682,7 @@ object fmMCX: TfmMCX
           ParentFont = False
           ParentShowHint = False
           RowCount = 20
+          ShowHint = True
           TabOrder = 3
           TitleFont.Color = clBlack
           TitleStyle = tsNative
@@ -779,7 +777,7 @@ object fmMCX: TfmMCX
         object sgConfig: TStringGrid
           Left = 0
           Height = 244
-          Hint = 'MCXConfig'
+          Hint = 'MCXConfig '#10#10'This defines the remaining key parameters used in an MCX/MMC'#10'simulation.'
           Top = 231
           Width = 355
           HelpType = htKeyword
@@ -791,7 +789,6 @@ object fmMCX: TfmMCX
           Columns = <          
             item
               ButtonStyle = cbsEllipsis
-              MaxSize = 200
               Title.Caption = 'Value'
               Width = 128
             end>
@@ -803,6 +800,7 @@ object fmMCX: TfmMCX
           ParentFont = False
           ParentShowHint = False
           RowCount = 15
+          ShowHint = True
           TabOrder = 7
           TitleFont.Color = clBlack
           TitleStyle = tsNative
@@ -961,9 +959,9 @@ object fmMCX: TfmMCX
         ParentFont = False
         object tvShapes: TTreeView
           Left = 0
-          Height = 384
+          Height = 405
           Hint = 'ShapeCfg'
-          Top = 69
+          Top = 70
           Width = 177
           HelpType = htKeyword
           HelpKeyword = 'HTML/mcx_help#GUI_shapeeditor'
@@ -984,9 +982,9 @@ object fmMCX: TfmMCX
         end
         object ToolBar2: TToolBar
           Left = 0
-          Height = 69
+          Height = 70
           Top = 0
-          Width = 347
+          Width = 355
           AutoSize = True
           ButtonHeight = 68
           ButtonWidth = 49
@@ -996,21 +994,21 @@ object fmMCX: TfmMCX
           ShowCaptions = True
           TabOrder = 1
           object ToolButton10: TToolButton
-            Left = 58
+            Left = 57
             Top = 2
             Action = shapeReset
             ParentShowHint = False
             ShowHint = True
           end
           object ToolButton18: TToolButton
-            Left = 111
+            Left = 109
             Top = 2
             Action = shapeDelete
             ParentShowHint = False
             ShowHint = True
           end
           object ToolButton31: TToolButton
-            Left = 164
+            Left = 161
             Top = 2
             Action = shapePrint
             ParentShowHint = False
@@ -1022,21 +1020,21 @@ object fmMCX: TfmMCX
             Action = shapePreview
           end
           object ToolButton35: TToolButton
-            Left = 218
+            Left = 213
             Height = 5
             Top = 2
             Caption = 'ToolButton35'
             Style = tbsDivider
           end
           object ToolButton38: TToolButton
-            Left = 223
+            Left = 218
             Top = 2
             Action = shapeAddName
             ParentShowHint = False
             ShowHint = True
           end
           object ToolButton50: TToolButton
-            Left = 276
+            Left = 270
             Top = 2
             Action = shapeAddOrigin
             ParentShowHint = False
@@ -1045,9 +1043,9 @@ object fmMCX: TfmMCX
         end
         object ToolBar3: TToolBar
           Left = 184
-          Height = 384
-          Top = 69
-          Width = 163
+          Height = 405
+          Top = 70
+          Width = 171
           Align = alRight
           Anchors = [akTop, akLeft, akRight, akBottom]
           AutoSize = True
@@ -1061,7 +1059,7 @@ object fmMCX: TfmMCX
           object ToolButton39: TToolButton
             Left = 51
             Hint = 'Reset volume and define a different dimension'
-            Top = 223
+            Top = 218
             Action = shapeAddGrid
             ParentShowHint = False
             ShowHint = True
@@ -1075,7 +1073,7 @@ object fmMCX: TfmMCX
           end
           object ToolButton41: TToolButton
             Left = 51
-            Top = 76
+            Top = 74
             Action = shapeAddSubgrid
             ParentShowHint = False
             ShowHint = True
@@ -1089,33 +1087,33 @@ object fmMCX: TfmMCX
           end
           object ToolButton43: TToolButton
             Left = 51
-            Top = 296
+            Top = 290
             Action = shapeAddYLayers
             ParentShowHint = False
             ShowHint = True
           end
           object ToolButton44: TToolButton
             Left = 1
-            Top = 149
+            Top = 146
             Action = shapeAddZLayers
             ParentShowHint = False
             ShowHint = True
           end
           object ToolButton45: TToolButton
             Left = 101
-            Top = 76
+            Top = 74
             Action = shapeAddXSlabs
           end
           object ToolButton46: TToolButton
             Left = 1
-            Top = 223
+            Top = 218
             Action = shapeAddCylinder
             ParentShowHint = False
             ShowHint = True
           end
           object ToolButton47: TToolButton
             Left = 1
-            Top = 296
+            Top = 290
             Action = shapeAddYSlabs
           end
           object ToolButton48: TToolButton
@@ -1125,14 +1123,14 @@ object fmMCX: TfmMCX
           end
           object ToolButton51: TToolButton
             Left = 1
-            Top = 76
+            Top = 74
             Action = shapeAddSphere
             ParentShowHint = False
             ShowHint = True
           end
           object ToolButton52: TToolButton
             Left = 51
-            Top = 149
+            Top = 146
             Action = shapeAddUpperSpace
             ParentShowHint = False
             ShowHint = True
@@ -1140,8 +1138,8 @@ object fmMCX: TfmMCX
         end
         object Splitter6: TSplitter
           Left = 177
-          Height = 384
-          Top = 69
+          Height = 405
+          Top = 70
           Width = 7
           Align = alRight
           ResizeAnchor = akRight
@@ -1680,6 +1678,10 @@ object fmMCX: TfmMCX
         '$Download: https://www.spiedigitallibrary.org/journals/journal-of-biomedical-optics/volume-23/issue-01/010504/Scalable-and-massively-parallel-Monte-Carlo-photon-transport-simulations-for/10.1117/1.JBO.23.1.010504.full?SSO=1#ArticleLink'
         ''
         ' -- "MMC" --'
+        '# [Fang2019] Qianqian Fang*, Shijie Yan, ““Graphics processing unit-accelerated mesh-based Monte Carlo photon transport simulations,” J. of Biomedical Optics, 24(11), 115002 (2019)'
+        '$Summary:  GPU-based MMC'
+        '$Download: http://dx.doi.org/10.1117/1.JBO.24.11.115002'
+        ''
         '# [Yan2019] Shijie Yan, Anh Phong Tran, Qianqian Fang*, “A dual-grid mesh-based Monte Carlo algorithm for efficient photon transport simulations in complex 3-D media,” J. of Biomedical Optics, 24(2), 020503 (2019).'
         '$Summary: Dual-grid MMC for faster and more accurate mesh-based simulations'
         '$Download: http://dx.doi.org/10.1117/1.JBO.24.2.020503'
@@ -1704,9 +1706,18 @@ object fmMCX: TfmMCX
         '$Summary:  original MMC paper'
         '$Download: https://www.osapublishing.org/boe/abstract.cfm?uri=boe-1-1-165'
         ''
+        ' -- "Applications" --'
+        '# [Yuan2020] Yaoshen Yuan, Paolo Cassano, Matthew Pias, Qianqian Fang*, (2020) "Transcranial photobiomodulation with near-infrared light from childhood to elderliness: simulation of dosimetry,", Neurophotonics, 7(1), 015009, URL: https://doi.org/10.1117/1.NPh.7.1.015009'
+        '$Summary: PBM dosage over lifespan'
+        '$Download: https://doi.org/10.1117/1.NPh.7.1.015009'
+        ''
+        '# [Brain2Mesh2020] Anh Phong Tran† , Shijie Yan† , Qianqian Fang*, (2020) "Improving model-based fNIRS analysis using mesh-based anatomical and light-transport models," Neurophotonics, 7(1), 015008, URL: https://doi.org/10.1117/1.NPh.7.1.015008'
+        '$Summary: Brain2Mesh - a one-liner for brain mesh generator (http://mcx.space/brain2mesh)'
+        '$Download: https://doi.org/10.1117/1.NPh.7.1.015008'
         ''
         'Output:'
       )
+      Options = [eoAutoIndent, eoBracketHighlight, eoGroupUndo, eoScrollPastEol, eoSmartTabs, eoTabsToSpaces, eoTrimTrailingSpaces, eoShowCtrlMouseLinks]
       MouseOptions = [emShowCtrlMouseLinks]
       VisibleSpecialChars = [vscSpace, vscTabAtLast]
       SelectedColor.BackPriority = 50
@@ -1780,12 +1791,15 @@ object fmMCX: TfmMCX
         AnchorSideLeft.Side = asrBottom
         Left = 404
         Height = 27
+        Hint = 'Send the user input to the input buffer of the external program '#10'currently being executed.'
         Top = 1
         Width = 102
         Anchors = [akTop, akLeft, akBottom]
         Caption = 'Send'
         OnClick = btSendCmdClick
         ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 0
       end
       object edCmdInput: TEdit
@@ -1794,10 +1808,13 @@ object fmMCX: TfmMCX
         AnchorSideRight.Control = btSendCmd
         Left = 69
         Height = 24
+        Hint = 'User Input'#10#10'When connecting to a remote server via ssh/scp, one may asked to type'#10'"yes" to save the ssh key or other interactive inputs. If this is the case, one'#10'can use this field to type user input, and click "Send" to pipe user input to '#10'the external program.'
         Top = 1
         Width = 335
         OnKeyPress = edCmdInputKeyPress
         ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 1
       end
       object Label5: TLabel
@@ -1830,10 +1847,10 @@ object fmMCX: TfmMCX
         AnchorSideTop.Side = asrCenter
         AnchorSideRight.Side = asrBottom
         Left = 516
-        Height = 24
-        Hint = 'DoRemote'
+        Height = 22
+        Hint = 'DoRemote '#10#10'Check this option asks MCXStudio to call the specified ssh command '#10'and run mcx/mmc simulations on remote servers. '#10#10'Please be aware that one must prepare the server and client to enable'#10'remote execution, this include'#10#10'1. install mcx/mmc/mcxcl executable on remote server and add path to'#10'    the PATH environment '#10'2. install ssh client on the local client; for Linux/Mac, ssh/scp command is'#10'    typically built-in; for windows, please install plink.exe and pscp.exe and'#10'    ensure that their paths are on the PATH environment variable'#10'3. optionally, one can set the SSH key between the client and server to '#10'    avoid typing password, please see http://www.linuxproblem.org/art_9.html'
         Top = 1
-        Width = 162
+        Width = 160
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#GUI_runremote'
         BorderSpacing.Left = 10
@@ -1841,6 +1858,8 @@ object fmMCX: TfmMCX
         Caption = 'Run remote command:'
         OnChange = edRespinChange
         ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 3
       end
       object edRemote: TComboBox
@@ -1848,9 +1867,9 @@ object fmMCX: TfmMCX
         AnchorSideLeft.Side = asrBottom
         AnchorSideTop.Side = asrBottom
         AnchorSideRight.Side = asrBottom
-        Left = 678
-        Height = 27
-        Hint = 'RemoteCmd'
+        Left = 676
+        Height = 25
+        Hint = 'RemoteCmd '#10#10'Please choose the remote connection command using the dropdown list, or'#10'type in this field manually. For windows, it is recommended to choose the '#10'plink.exe command; for Linux, it is recommended to use the ssh command.'#10#10'Please replace the user@server by the actual username and the server IP'#10'or domain name.'#10#10'You are highly recommended to set up key-based ssh access to avoid typing'#10'password. Tutorials can be found at http://www.linuxproblem.org/art_9.html'
         Top = 0
         Width = 255
         HelpType = htKeyword
@@ -1868,6 +1887,8 @@ object fmMCX: TfmMCX
         OnChangeBounds = edRespinChange
         OnEditingDone = edRespinChange
         ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 4
         Text = 'Built-in ssh'
       end
@@ -1877,11 +1898,11 @@ object fmMCX: TfmMCX
         AnchorSideTop.Control = edRemote
         AnchorSideTop.Side = asrCenter
         AnchorSideRight.Control = Button2
-        Left = 933
-        Height = 24
-        Hint = 'DoSharedFS'
+        Left = 931
+        Height = 22
+        Hint = 'DoSharedFS '#10#10'Checking this option suggests that both the client and the server'#10'share the same file system, thus, no file copying is needed. In other'#10'word, the folder structure to read/write on both client and server'#10'are identical. This is the case when one uses nfs/autofs on Linux/Mac.'
         Top = 1
-        Width = 161
+        Width = 163
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#GUI_sharedfilesystem'
         Anchors = [akTop, akLeft, akRight]
@@ -1890,6 +1911,8 @@ object fmMCX: TfmMCX
         Enabled = False
         OnChange = edRespinChange
         ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 5
       end
       object btExpandOutput: TButton
@@ -1897,6 +1920,7 @@ object fmMCX: TfmMCX
         AnchorSideLeft.Side = asrBottom
         Left = 1227
         Height = 29
+        Hint = 'To expand or collapse the command window.'
         Top = 0
         Width = 59
         Align = alRight
@@ -1904,6 +1928,8 @@ object fmMCX: TfmMCX
         Caption = '▵'
         OnClick = btExpandOutputClick
         ParentFont = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 6
       end
     end
@@ -1923,25 +1949,27 @@ object fmMCX: TfmMCX
     Height = 507
     Top = 133
     Width = 750
-    HorzScrollBar.Page = 732
+    HorzScrollBar.Page = 728
     VertScrollBar.Page = 505
     Align = alClient
     ClientHeight = 505
-    ClientWidth = 732
+    ClientWidth = 736
     DockSite = True
     Enabled = False
     ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 9
     object grBasic: TGroupBox
       Left = 0
-      Height = 94
-      Top = 40
-      Width = 732
+      Height = 92
+      Top = 38
+      Width = 736
       Align = alTop
       AutoSize = True
       Caption = 'Basic Settings'
-      ClientHeight = 78
-      ClientWidth = 728
+      ClientHeight = 76
+      ClientWidth = 732
       Font.Style = [fsBold]
       ParentColor = False
       ParentFont = False
@@ -1951,11 +1979,11 @@ object fmMCX: TfmMCX
         AnchorSideLeft.Side = asrBottom
         AnchorSideTop.Control = grBasic
         AnchorSideRight.Control = Label10
-        Left = 130
+        Left = 128
         Height = 24
-        Hint = 'InputFile'
+        Hint = 'InputFile '#10#10'Specify the input file in either .inp or .json format.'
         Top = 5
-        Width = 303
+        Width = 305
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#input'
         DialogOptions = []
@@ -1981,7 +2009,7 @@ object fmMCX: TfmMCX
         Height = 14
         Hint = '-s (--sessionid)'
         Top = 34
-        Width = 130
+        Width = 128
         Alignment = taRightJustify
         Anchors = [akTop, akLeft, akRight]
         Caption = 'Session ID (-s)'
@@ -1996,9 +2024,9 @@ object fmMCX: TfmMCX
         AnchorSideLeft.Side = asrBottom
         AnchorSideTop.Control = edConfigFile
         AnchorSideTop.Side = asrBottom
-        Left = 130
+        Left = 128
         Height = 24
-        Hint = 'Session'
+        Hint = 'Session '#10#10'This string will be used in all output files as part of the file names.'
         Top = 29
         Width = 117
         HelpType = htKeyword
@@ -2034,7 +2062,7 @@ object fmMCX: TfmMCX
         AnchorSideTop.Side = asrCenter
         Left = 433
         Height = 24
-        Hint = 'PhotonNum'
+        Hint = 'PhotonNum '#10#10'This defines the total simulated photons.'#10#10'Can be an integer or number in scientific form. For example'#10'100000 and 1e5 are both acceptable.'#10#10'Please be noted that we highly suggest one to start with a'#10'small photon number to avoid extended run time.'
         Top = 29
         Width = 117
         HelpType = htKeyword
@@ -2043,6 +2071,7 @@ object fmMCX: TfmMCX
         ParentFont = False
         TabOrder = 4
         Text = '1e6'
+        TextHint = 'Integer'
       end
       object Label8: TLabel
         AnchorSideLeft.Control = edPhoton
@@ -2070,7 +2099,7 @@ object fmMCX: TfmMCX
         AnchorSideBottom.Side = asrBottom
         Left = 672
         Height = 24
-        Hint = 'UnitInMM'
+        Hint = 'UnitInMM '#10#10'This defines the voxel size. By default, 1x1x1 mm^3 voxels'#10'are used. Has to be a positive floating point number. For example,'#10'0.1 defines a 0.1x0.1x0.1 mm^3 voxel.'#10#10'Currently, only isotropic voxels are supported.'
         Top = 29
         Width = 52
         HelpType = htKeyword
@@ -2088,8 +2117,8 @@ object fmMCX: TfmMCX
         AnchorSideTop.Side = asrCenter
         Left = 487
         Height = 24
-        Hint = 'Seed'
-        Top = 53
+        Hint = 'Seed '#10#10'If this field is a large integer number, this specifies the RNG seed; '#10#10'if this is a file name ending with .mch, it loads an .mch file generated '#10'from previous simulation and replays the detected photons.'
+        Top = 52
         Width = 117
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#seed'
@@ -2097,6 +2126,7 @@ object fmMCX: TfmMCX
         ParentFont = False
         TabOrder = 6
         Text = '1648335518'
+        TextHint = 'A large integer or .mch file name'
       end
       object Label13: TLabel
         AnchorSideLeft.Control = edPhoton
@@ -2106,7 +2136,7 @@ object fmMCX: TfmMCX
         Left = 433
         Height = 14
         Hint = '-E (--seed)'
-        Top = 58
+        Top = 57
         Width = 54
         Alignment = taRightJustify
         Caption = 'Seed (-E)'
@@ -2120,9 +2150,9 @@ object fmMCX: TfmMCX
         AnchorSideTop.Control = edConfigFile
         AnchorSideTop.Side = asrCenter
         Left = 0
-        Height = 24
-        Top = 5
-        Width = 130
+        Height = 22
+        Top = 6
+        Width = 128
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#input'
         Caption = 'Use Input File (-f)'
@@ -2136,9 +2166,9 @@ object fmMCX: TfmMCX
         AnchorSideRight.Control = grBasic
         AnchorSideRight.Side = asrBottom
         Left = 514
-        Height = 24
-        Top = 5
-        Width = 214
+        Height = 22
+        Top = 6
+        Width = 218
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#GUI_simulation_designer'
         Anchors = [akTop, akLeft, akRight]
@@ -2173,7 +2203,7 @@ object fmMCX: TfmMCX
         Left = 604
         Height = 23
         Hint = 'Load seed data from previous simulations for replay'
-        Top = 54
+        Top = 53
         Width = 26
         OnClick = btLoadSeedClick
         ShowHint = True
@@ -2186,10 +2216,10 @@ object fmMCX: TfmMCX
         AnchorSideTop.Control = btLoadSeed
         AnchorSideTop.Side = asrCenter
         Left = 635
-        Height = 24
-        Hint = 'DoReplay'
+        Height = 22
+        Hint = 'DoReplay '#10#10'When selecting a .mch file as the seed, this checkbox is automatically '#10'checked, signifying that MCX/MMC will perform a photon replay by'#10'reading the RNG seeds from the .mch file and rerun the photons to produce'#10'the Jacobians - in such case, one can use the "Output Type" to select which'#10'metric to output.'
         Top = 53
-        Width = 68
+        Width = 66
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#GUI_replay'
         BorderSpacing.Left = 5
@@ -2203,7 +2233,8 @@ object fmMCX: TfmMCX
         AnchorSideTop.Control = edOutputType
         AnchorSideTop.Side = asrCenter
         Left = 351
-        Height = 25
+        Height = 23
+        Hint = 'OutputFormat '#10#10'This specifies the output data file format. The supported formats are'#10#10'.mc2 - a simple binary format stores the voxel-by-voxel binary data'#10'    in the column-major order'#10'.nii - the NIfTI-1 format'#10'.tx3 - a simple 3D texture binary format.'#10'ascii - text-based data file'
         Top = 53
         Width = 73
         ItemHeight = 0
@@ -2219,6 +2250,7 @@ object fmMCX: TfmMCX
         OnChange = edRespinChange
         ParentFont = False
         ParentShowHint = False
+        ShowHint = True
         Style = csDropDownList
         TabOrder = 8
         Text = 'mc2'
@@ -2229,10 +2261,10 @@ object fmMCX: TfmMCX
         AnchorSideTop.Control = edOutputType
         AnchorSideTop.Side = asrCenter
         AnchorSideRight.Control = edOutputFormat
-        Left = 247
+        Left = 245
         Height = 14
         Hint = '-u (--unitinmm)'
-        Top = 58
+        Top = 57
         Width = 89
         Alignment = taRightJustify
         Caption = 'Output format'
@@ -2248,10 +2280,10 @@ object fmMCX: TfmMCX
         AnchorSideTop.Control = edOutputType
         AnchorSideTop.Side = asrCenter
         AnchorSideRight.Control = edOutputType
-        Left = 28
+        Left = 26
         Height = 14
         Hint = '-O (--outputtype)'
-        Top = 58
+        Top = 57
         Width = 102
         Alignment = taRightJustify
         Anchors = [akTop, akRight]
@@ -2268,18 +2300,17 @@ object fmMCX: TfmMCX
         AnchorSideTop.Side = asrBottom
         AnchorSideRight.Control = edSession
         AnchorSideRight.Side = asrBottom
-        Left = 130
-        Height = 25
-        Hint = 'OutputType'
+        Left = 128
+        Height = 23
+        Hint = 'OutputType '#10#10'This option specifies the output data type. '#10#10'* Fluence rate [J/mm^2/s] - the default output'#10'* Fluence [J/mm^2] - the integration of the fluence '#10'   rate over each time gate'#10'* Energy density [J/mm^3] - can be computed by multiplying '#10'   fluence with absorption μa'#10'* Absorption Jacobian (mua) [1/mm] - in the replay mode, this'#10'   outputs the sensitivity matrix for μa;'#10'* Average scattering event count - in the replay mode, this'#10'   outputs the number of scattering event per voxel'#10'* Momentum transfer sensivity (DCS) - in the replay mode, this '#10'   outputs the momentum transfer contribution/sensitivity from '#10'   each voxel.'
         Top = 53
         Width = 117
         Anchors = [akTop, akLeft, akRight]
         ItemHeight = 0
-        ItemIndex = 0
         Items.Strings = (
           'X - fluence rate in [J/(mm^2s)]'
           'F - fluence [J/mm^2]'
-          'E - energy deposition [J]'
+          'E - energy density [J/mm^3]'
           'J - jacobian (mua) [1/mm]'
           'P - jacobian (scat) [1/mm]'
           'M - jacobian (dcs)'
@@ -2287,9 +2318,9 @@ object fmMCX: TfmMCX
         OnChange = edRespinChange
         ParentFont = False
         ParentShowHint = False
+        ShowHint = True
         Style = csDropDownList
         TabOrder = 9
-        Text = 'X - fluence rate in [J/(mm^2s)]'
       end
     end
     object grAdvSettings: TGroupBox
@@ -2297,12 +2328,12 @@ object fmMCX: TfmMCX
       AnchorSideTop.Side = asrBottom
       Left = 0
       Height = 201
-      Top = 372
-      Width = 732
+      Top = 357
+      Width = 736
       Align = alTop
       Caption = 'Advanced Settings'
       ClientHeight = 185
-      ClientWidth = 728
+      ClientWidth = 732
       Font.Style = [fsBold]
       ParentColor = False
       ParentFont = False
@@ -2317,7 +2348,7 @@ object fmMCX: TfmMCX
         Left = 0
         Height = 14
         Hint = '-a (--array)'
-        Top = 27
+        Top = 26
         Width = 169
         Alignment = taRightJustify
         Anchors = [akTop, akLeft, akRight]
@@ -2333,8 +2364,8 @@ object fmMCX: TfmMCX
         AnchorSideRight.Control = edBubble
         AnchorSideRight.Side = asrBottom
         Left = 169
-        Height = 40
-        Hint = 'ArrayOrder'
+        Height = 38
+        Hint = 'ArrayOrder '#10#10'Select MATLAB array order indicates that the input volume has a'#10'column-major order - i.e. the left-most axis is the fastest index of'#10'the array, like in MATLAB or FORTRAN.'#10#10'Select C array order indicates that the input volume uses the '#10'row-major order - i.e. the right-most index is the fastest index'#10'of the array, like in C and Python.'
         Top = 14
         Width = 120
         HelpType = htKeyword
@@ -2351,7 +2382,7 @@ object fmMCX: TfmMCX
         ChildSizing.ShrinkVertical = crsScaleChilds
         ChildSizing.Layout = cclLeftToRightThenTopToBottom
         ChildSizing.ControlsPerLine = 2
-        ClientHeight = 36
+        ClientHeight = 34
         ClientWidth = 116
         Columns = 2
         ItemIndex = 0
@@ -2371,7 +2402,7 @@ object fmMCX: TfmMCX
         Left = 0
         Height = 14
         Hint = '-g (--gategroup)'
-        Top = 85
+        Top = 83
         Width = 208
         Alignment = taRightJustify
         Anchors = [akTop, akLeft, akRight]
@@ -2387,7 +2418,7 @@ object fmMCX: TfmMCX
         Left = 208
         Height = 24
         Hint = 'GateNum'
-        Top = 80
+        Top = 78
         Width = 81
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#gategroup'
@@ -2407,7 +2438,7 @@ object fmMCX: TfmMCX
         Left = 53
         Height = 14
         Hint = '-r (--skipradius)'
-        Top = 59
+        Top = 57
         Width = 155
         Alignment = taRightJustify
         Anchors = [akTop, akRight]
@@ -2423,7 +2454,7 @@ object fmMCX: TfmMCX
         Left = 208
         Height = 24
         Hint = 'BubbleSize'
-        Top = 54
+        Top = 52
         Width = 81
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#skipradius'
@@ -2440,7 +2471,7 @@ object fmMCX: TfmMCX
         Left = 306
         Height = 14
         Hint = '(--atomic)'
-        Top = 27
+        Top = 26
         Width = 113
         Alignment = taRightJustify
         BorderSpacing.Left = 17
@@ -2459,7 +2490,7 @@ object fmMCX: TfmMCX
         Left = 289
         Height = 16
         Hint = '-H (--maxdetphoton)'
-        Top = 58
+        Top = 56
         Width = 247
         Alignment = taRightJustify
         Anchors = [akTop, akLeft, akRight]
@@ -2475,8 +2506,8 @@ object fmMCX: TfmMCX
         AnchorSideTop.Side = asrBottom
         Left = 536
         Height = 24
-        Hint = 'DetectedNum'
-        Top = 54
+        Hint = 'DetectedNum '#10#10'This sets the maximum number of detected photons to be stored. If'#10'the actual detected photon number is higher than this specified number,'#10'mcx/mmc will generate an warning and print out the actual detected '#10'photon count; one can use that output in this field to allow MCX to store'#10'all photons.'
+        Top = 52
         Width = 81
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#maxdetphoton'
@@ -2493,7 +2524,7 @@ object fmMCX: TfmMCX
         Left = 0
         Height = 16
         Hint = '-r (--repeat)'
-        Top = 110
+        Top = 108
         Width = 208
         Alignment = taRightJustify
         Anchors = [akTop, akLeft, akRight]
@@ -2510,8 +2541,8 @@ object fmMCX: TfmMCX
         AnchorSideTop.Side = asrBottom
         Left = 208
         Height = 24
-        Hint = 'RespinNum'
-        Top = 106
+        Hint = 'RespinNum '#10#10'Setting this to a positive number will repeat the simulation by the specified'#10'repeition count starting from different random seeds.'#10#10'A negative integer asks MCX to divide the total photon number by the '#10'absolute value of this input and run each subpart at a time. This can '#10'reduce the per-call run time, but may result in extensive overhead of'#10'running repeated simulations.'
+        Top = 104
         Width = 81
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#repeat'
@@ -2533,7 +2564,7 @@ object fmMCX: TfmMCX
         Left = 423
         Height = 73
         Hint = 'DebugFlags'
-        Top = 80
+        Top = 78
         Width = 194
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#debug'
@@ -2562,7 +2593,7 @@ object fmMCX: TfmMCX
         Left = 289
         Height = 16
         Hint = '-D (--debuglevel)'
-        Top = 85
+        Top = 83
         Width = 128
         Alignment = taRightJustify
         Anchors = [akTop, akLeft, akRight]
@@ -2581,7 +2612,7 @@ object fmMCX: TfmMCX
         Left = 208
         Height = 24
         Hint = 'ReplayDet'
-        Top = 132
+        Top = 130
         Width = 81
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#replaydet'
@@ -2600,7 +2631,7 @@ object fmMCX: TfmMCX
         Left = 0
         Height = 16
         Hint = '-Y (--replaydet)'
-        Top = 136
+        Top = 134
         Width = 208
         Alignment = taRightJustify
         Anchors = [akTop, akLeft, akRight]
@@ -2619,10 +2650,10 @@ object fmMCX: TfmMCX
         AnchorSideRight.Control = grAdvSettings
         AnchorSideRight.Side = asrBottom
         Left = 423
-        Height = 40
-        Hint = 'UseAtomic'
+        Height = 38
+        Hint = 'UseAtomic '#10#10'Using atomic operations avoids conflicts between multiple threads when'#10'writing to the same voxel, thus is highly recommended.'#10#10'In the very old CUDA hardware, using atomic operations has a high '#10'overhead, but such overhead was signficiantly less since the Fermi GPU.'
         Top = 14
-        Width = 202
+        Width = 198
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#skipradius'
         AutoFill = True
@@ -2637,8 +2668,8 @@ object fmMCX: TfmMCX
         ChildSizing.ShrinkVertical = crsScaleChilds
         ChildSizing.Layout = cclLeftToRightThenTopToBottom
         ChildSizing.ControlsPerLine = 2
-        ClientHeight = 36
-        ClientWidth = 198
+        ClientHeight = 34
+        ClientWidth = 194
         Columns = 2
         ItemIndex = 0
         Items.Strings = (
@@ -2657,7 +2688,7 @@ object fmMCX: TfmMCX
         Left = 0
         Height = 16
         Hint = '-Y (--replaydet)'
-        Top = 160
+        Top = 158
         Width = 208
         Alignment = taRightJustify
         Anchors = [akTop, akLeft, akRight]
@@ -2678,8 +2709,8 @@ object fmMCX: TfmMCX
         AnchorSideBottom.Side = asrBottom
         Left = 208
         Height = 24
-        Hint = 'MoreParam'
-        Top = 156
+        Hint = 'MoreParam '#10#10'One can use this field to manually specify additional parameters that'#10'are not supported by this GUI tool. Any parameter set here will overwrite'#10'the previous setting.'
+        Top = 154
         Width = 409
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#GUI_userparam'
@@ -2693,7 +2724,7 @@ object fmMCX: TfmMCX
         Left = 0
         Height = 14
         Top = 0
-        Width = 728
+        Width = 732
         Align = alTop
         Caption = '▾'
         Color = clMenuText
@@ -2708,17 +2739,17 @@ object fmMCX: TfmMCX
       AnchorSideTop.Side = asrBottom
       AnchorSideBottom.Control = grAdvSettings
       Left = 0
-      Height = 136
-      Top = 236
-      Width = 732
+      Height = 126
+      Top = 231
+      Width = 736
       Align = alTop
       AutoSize = True
       Caption = 'Switches'
       ChildSizing.LeftRightSpacing = 10
       ChildSizing.Layout = cclTopToBottomThenLeftToRight
       ChildSizing.ControlsPerLine = 5
-      ClientHeight = 120
-      ClientWidth = 728
+      ClientHeight = 110
+      ClientWidth = 732
       Font.Style = [fsBold]
       ParentColor = False
       ParentFont = False
@@ -2726,10 +2757,10 @@ object fmMCX: TfmMCX
       object ckReflect: TCheckBox
         AnchorSideTop.Side = asrBottom
         Left = 10
-        Height = 24
-        Hint = 'DoReflect'
+        Height = 22
+        Hint = 'DoReflect '#10#10'Check this option (by default) enables reflection/refrection calculations '#10'when  refractive index mismatch is detected at tissue boundaries.'#10#10'If this option is unchecked, any photon hits the boundary between a '#10'non-zero and zero-valued voxel will be terminated (i.e. total'#10'absorbtion boundary condition). '#10#10'The medium outside of the volume bounding box is assumed to have '#10'the optical properties defined as label 0 (the first row in the Media Settings'#10'table on the right).'
         Top = 0
-        Width = 219
+        Width = 217
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#reflect'
         Caption = 'Do reflection all boundaries (-b)'
@@ -2741,10 +2772,10 @@ object fmMCX: TfmMCX
       end
       object ckNormalize: TCheckBox
         Left = 10
-        Height = 24
-        Hint = 'DoNormalize'
-        Top = 24
-        Width = 219
+        Height = 22
+        Hint = 'DoNormalize '#10#10'Check this option allows MCX/MMC to normalize the output by the '#10'below formula'#10#10'Φ(i,j,k,t)=E(i,j,k,t) / (V*E_total*dT)'#10#10'where E(i,j,k,t) is the raw accummuated energy at each voxel; '#10'V is the size of the voxel in mm^3; dT is the time-gate width in s.'#10#10'After normalization, the result becomes TPSF or Green''s function.'#10#10'Unchecking this option disables normalization.'
+        Top = 22
+        Width = 217
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#normalize'
         Caption = 'Do normalization (-U)'
@@ -2756,10 +2787,10 @@ object fmMCX: TfmMCX
       end
       object ckSrcFrom0: TCheckBox
         Left = 10
-        Height = 24
-        Hint = 'DoSrcFrom0'
-        Top = 48
-        Width = 219
+        Height = 22
+        Hint = 'DoSrcFrom0 '#10#10'Checking this item assumes the lower-bottom corner of the voxelated '#10'domain is [0,0,0] mm. The definitions of source and detector positions '#10'are impacted by this definition.'#10#10'Unchecking this option assumes the  lower-bottom corner of the  '#10'domain is [1,1,1] mm.'
+        Top = 44
+        Width = 217
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#srcfrom0'
         Caption = 'Orign from [0,0,0] (-z)'
@@ -2771,10 +2802,10 @@ object fmMCX: TfmMCX
       end
       object ckSaveDetector: TCheckBox
         Left = 10
-        Height = 24
-        Hint = 'SaveDetector'
-        Top = 72
-        Width = 219
+        Height = 22
+        Hint = 'SaveDetector '#10#10'Checking this option allows one to store detected photon '#10'information. The output data records can be user-defined by'#10'selecting the check-box list entitled "Save detected photon".'#10'The output data are stored in a .mch file.'#10#10'Unchecking this option disables output the .mch file (can be '#10'slightly faster).'
+        Top = 66
+        Width = 217
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#savedet'
         Caption = 'Save detected photons (-d)'
@@ -2786,10 +2817,10 @@ object fmMCX: TfmMCX
       end
       object ckSaveData: TCheckBox
         Left = 10
-        Height = 24
-        Hint = 'DoSave'
-        Top = 96
-        Width = 219
+        Height = 22
+        Hint = 'DoSave '#10#10'Checking this option makes MCX/MMC outputs the volumetric fluence'#10'data: for MCX, it is the .mc2/.nii file; for MMC, it is a .dat file using P/H/B/S '#10'ray-tracers and .mc2/.nii files when using the dual-grid mode (-M G).'#10#10'Unchecking this option stops MCX/MMC output the .mc2/.nii file.'
+        Top = 88
+        Width = 217
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#save2pt'
         Caption = 'Save fluence (-S)'
@@ -2800,11 +2831,11 @@ object fmMCX: TfmMCX
         TabOrder = 4
       end
       object ckSaveRef: TCheckBox
-        Left = 229
-        Height = 24
-        Hint = 'DoSaveRef'
+        Left = 227
+        Height = 22
+        Hint = 'DoSaveRef '#10#10'Checking this option allows MCX/MMC to output the escaped photon'#10'weights on the exterior surface of the domain. For MCX, to save the '#10'total diffuse reflectance, one must pad a layer of zero voxels in the '#10'facet or full bounding box of the domain to store such data. The raw '#10'total diffuse reflectance are normalized and stored as negative values'#10'in the .mc2/.nii file. When loading such file using loadmc2.m, the diffuse'#10'reflectance data are extracted and converted to positive output.'#10#10'Unchecking this option disables saving diffuse reflectance data.'
         Top = 0
-        Width = 198
+        Width = 196
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#saveref'
         Caption = 'Save diffuse reflectance (-X)'
@@ -2813,11 +2844,11 @@ object fmMCX: TfmMCX
         TabOrder = 5
       end
       object ckSkipVoid: TCheckBox
-        Left = 229
-        Height = 24
-        Hint = 'DoSkipVoid'
-        Top = 24
-        Width = 198
+        Left = 227
+        Height = 22
+        Hint = 'DoSkipVoid '#10#10'Checking this option starts photon''s ellapse time when it first enters'#10'a non-zero voxel.'#10#10'Unchecking this option starts photon''s ellapse time at launch time,'#10'regardless it is launched in the background (0-valued) voxel or non-zero'#10'voxel.'
+        Top = 22
+        Width = 196
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#skipvoid'
         Caption = 'Skip void space (-k)'
@@ -2826,11 +2857,11 @@ object fmMCX: TfmMCX
         TabOrder = 6
       end
       object ckSaveSeed: TCheckBox
-        Left = 229
-        Height = 24
-        Hint = 'DoSaveSeed'
-        Top = 48
-        Width = 198
+        Left = 227
+        Height = 22
+        Hint = 'DoSaveSeed '#10#10'Checking this option allows one to save the RNG seeds of the detected'#10'photons in the .mch file. This makes it possible to perform photon replay'#10'to compute the Jacobian when feeding this output .mch file as the seed'#10'for the replay run.'#10#10'Unchecking this option disables saving photon seeds.'
+        Top = 44
+        Width = 196
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#saveseed'
         Caption = 'Save photon seeds (-q)'
@@ -2839,11 +2870,11 @@ object fmMCX: TfmMCX
         TabOrder = 7
       end
       object ckSaveMask: TCheckBox
-        Left = 229
-        Height = 24
-        Hint = 'DoSaveMask'
-        Top = 72
-        Width = 198
+        Left = 227
+        Height = 22
+        Hint = 'DoSaveMask '#10#10'Checking this option asks MCX to output the pre-processed volume '#10'masks. The preprocessed mask contains the voxels that are covered'#10'under detectors; these voxels are designated by setting the sign-bit '#10'as 1. One can visualize this dumped data mask using mcxplotvol.m'#10#10'Unchecking this option suppresses the output of this mask file.'
+        Top = 66
+        Width = 196
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#dumpmask'
         Caption = 'Save volume mask (-M)'
@@ -2852,11 +2883,11 @@ object fmMCX: TfmMCX
         TabOrder = 8
       end
       object ckSpecular: TCheckBox
-        Left = 229
-        Height = 24
-        Hint = 'DoSpecular'
-        Top = 96
-        Width = 198
+        Left = 227
+        Height = 22
+        Hint = 'DoSpecular '#10#10'Checking this option performs a transmission calculation if a photon '#10'is launched in the background; this results in change of direction angle'#10'and loss of energy.'#10#10'Unchecking this option moves a photon into a non-zero voxel without'#10'considering the specular reflection and change of direction.'
+        Top = 88
+        Width = 196
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#specular'
         Caption = 'Do specular reflection (-V)'
@@ -2869,21 +2900,21 @@ object fmMCX: TfmMCX
         AnchorSideLeft.Side = asrBottom
         AnchorSideBottom.Control = grSwitches
         AnchorSideBottom.Side = asrBottom
-        Left = 587
-        Height = 120
+        Left = 583
+        Height = 110
         Top = 0
         Width = 131
         Anchors = [akTop, akLeft, akBottom]
         Caption = 'Boundary cond.'
-        ClientHeight = 104
+        ClientHeight = 94
         ClientWidth = 127
         Font.Style = [fsBold]
         ParentFont = False
         TabOrder = 10
         object vlBC: TValueListEditor
           Left = 0
-          Height = 104
-          Hint = 'Boundary'
+          Height = 94
+          Hint = 'Boundary '#10#10'Using this box to set the boundary condition for each one of the 6'#10'facets on the bounding box. A total of 4 boundary conditions are'#10'supported:'#10#10'1. total absorbing BC: photon hiting the boundary are terminated'#10'2. Fresnel reflection BC: perform Fresnel reflection/transmission'#10'3. mirror/total reflection BC: photon is 100% reflected (can run a long time)'#10'4. cylic BC: a photon exiting from a facet will re-enter from the opposite one'
           Top = 0
           Width = 127
           HelpType = htKeyword
@@ -2914,8 +2945,8 @@ object fmMCX: TfmMCX
           )
           OnGetPickList = vlBCGetPickList
           ColWidths = (
-            55
-            56
+            57
+            58
           )
         end
       end
@@ -2924,21 +2955,21 @@ object fmMCX: TfmMCX
         AnchorSideLeft.Side = asrBottom
         AnchorSideBottom.Control = grSwitches
         AnchorSideBottom.Side = asrBottom
-        Left = 427
-        Height = 120
+        Left = 423
+        Height = 110
         Top = 0
         Width = 160
         Anchors = [akTop, akLeft, akBottom]
         Caption = 'Save detected photon'
-        ClientHeight = 104
+        ClientHeight = 94
         ClientWidth = 156
         Font.Style = [fsBold]
         ParentFont = False
         TabOrder = 11
         object ckbDet: TCheckListBox
           Left = 6
-          Height = 94
-          Hint = 'SaveDetFlag'
+          Height = 84
+          Hint = 'SaveDetFlag '#10#10'This checkbox list allows users to select the detected photon'#10'data items that they want to save in the .mch file.'#10#10'By default, only the Detector ID and Partial Pathlength are stored.'
           Top = 2
           Width = 150
           HelpType = htKeyword
@@ -2972,14 +3003,14 @@ object fmMCX: TfmMCX
       AnchorSideTop.Side = asrBottom
       AnchorSideBottom.Control = grSwitches
       Left = 0
-      Height = 102
-      Top = 134
-      Width = 732
+      Height = 101
+      Top = 130
+      Width = 736
       Align = alTop
       AutoSize = True
       Caption = 'GPU Settings'
-      ClientHeight = 86
-      ClientWidth = 728
+      ClientHeight = 85
+      ClientWidth = 732
       Font.Style = [fsBold]
       ParentColor = False
       ParentFont = False
@@ -2992,7 +3023,7 @@ object fmMCX: TfmMCX
         Left = 0
         Height = 14
         Hint = '-t (--thread)'
-        Top = 31
+        Top = 28
         Width = 114
         Alignment = taRightJustify
         Caption = 'Thread number (-t)'
@@ -3008,10 +3039,10 @@ object fmMCX: TfmMCX
         AnchorSideRight.Control = ckAutopilot
         AnchorSideRight.Side = asrBottom
         Left = 150
-        Height = 27
-        Hint = 'ThreadNum'
-        Top = 25
-        Width = 112
+        Height = 25
+        Hint = 'ThreadNum '#10#10'Specify a large integer multiple of 32 (the warp size) to manually '#10'define the thread numbers.'#10#10'This is only used when the -A (autopilot mode) is not enabled.'
+        Top = 23
+        Width = 110
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#thread'
         Anchors = [akTop, akLeft, akRight]
@@ -3054,10 +3085,10 @@ object fmMCX: TfmMCX
         AnchorSideLeft.Control = grGPU
         AnchorSideTop.Control = grGPU
         Left = 5
-        Height = 24
-        Hint = 'Autopilot'
+        Height = 22
+        Hint = 'Autopilot '#10#10'Checking this box tells MCX/MMC to automatically determine the "optimal"'#10'thread number and block size by using the hardware information.'#10#10'It is recommended to always check this box. The key to maximize simulation'#10'throughput is to ensure a large number of threads are launched to keep the'#10'hardware resources fully utilized.'
         Top = 1
-        Width = 257
+        Width = 255
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#autopilot'
         BorderSpacing.Left = 5
@@ -3076,7 +3107,7 @@ object fmMCX: TfmMCX
         Left = 0
         Height = 14
         Hint = '-T (--blocksize)'
-        Top = 58
+        Top = 53
         Width = 128
         Alignment = taRightJustify
         Caption = 'Thread block size (-T)'
@@ -3094,10 +3125,10 @@ object fmMCX: TfmMCX
         AnchorSideBottom.Control = grGPU
         AnchorSideBottom.Side = asrBottom
         Left = 150
-        Height = 27
-        Hint = 'ThreadBlock'
-        Top = 52
-        Width = 112
+        Height = 25
+        Hint = 'ThreadBlock '#10#10'Specify a small integer, preferably a multiple of 32, to define '#10'the block size - for example, 64 means a thread block contains '#10'64 threads.'#10#10'This is only used when the -A (autopilot mode) is not enabled.'
+        Top = 48
+        Width = 110
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#blocksize'
         Anchors = [akTop, akLeft, akRight]
@@ -3125,10 +3156,10 @@ object fmMCX: TfmMCX
         AnchorSideTop.Side = asrBottom
         AnchorSideBottom.Control = grGPU
         AnchorSideBottom.Side = asrBottom
-        Left = 278
+        Left = 276
         Height = 56
-        Hint = 'GPUID'
-        Top = 22
+        Hint = 'GPUID '#10#10'Use this list to select the device or devices (CPU or GPU) used to'#10'run the simulation. For MCX, if multiple CUDA GPUs are installed, one'#10'can select multiple devices to speed up the calculation; for MCXCL'#10'and MMC, one can select OpenCL devices that include both CPU and'#10'GPUs. In such case, only devices of the same platform can be selected.'#10'For example, an NVIDIA GPU and a CPU can not be selected together.'
+        Top = 21
         Width = 171
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#gpu'
@@ -3157,10 +3188,10 @@ object fmMCX: TfmMCX
         AnchorSideLeft.Control = edGPUID
         AnchorSideTop.Control = ckAutopilot
         AnchorSideTop.Side = asrCenter
-        Left = 278
+        Left = 276
         Height = 14
         Hint = '-G (--gpu)'
-        Top = 6
+        Top = 5
         Width = 70
         Alignment = taRightJustify
         Caption = 'Run MCX on'
@@ -3173,10 +3204,10 @@ object fmMCX: TfmMCX
         AnchorSideLeft.Control = edWorkload
         AnchorSideTop.Control = Label12
         AnchorSideTop.Side = asrCenter
-        Left = 465
+        Left = 463
         Height = 14
         Hint = '-W (--workload)'
-        Top = 6
+        Top = 5
         Width = 88
         Alignment = taRightJustify
         Caption = 'Workload split'
@@ -3191,10 +3222,10 @@ object fmMCX: TfmMCX
         AnchorSideTop.Control = Label15
         AnchorSideTop.Side = asrBottom
         AnchorSideBottom.Side = asrBottom
-        Left = 465
+        Left = 463
         Height = 24
-        Hint = 'Workload'
-        Top = 22
+        Hint = 'Workload '#10#10'One can specify a series of comma-separated numbers to specify the'#10'relative portion of workload between multiple selected devices. '#10#10'For example: 10,10 asks MCX to run 50% of the total photons using the'#10'1st device and 50% on the 2nd device. On the other hand, 10,100 splits'#10'the total photon 1:10 between the 1st and 2nd devices.'
+        Top = 21
         Width = 117
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#workload'
@@ -3205,16 +3236,18 @@ object fmMCX: TfmMCX
         ParentFont = False
         TabOrder = 4
         Text = '100'
+        TextHint = 'Comma separated numbers'
       end
       object ckLockGPU: TCheckBox
         AnchorSideLeft.Control = Label12
         AnchorSideLeft.Side = asrBottom
         AnchorSideTop.Control = Label12
         AnchorSideTop.Side = asrCenter
-        Left = 358
-        Height = 24
+        Left = 356
+        Height = 22
+        Hint = 'Checking this box prevents MCXStudio from updating the device list'#10'when switching between different simulation sessions.'#10#10'When running simulation on a remote server, it is recommended to'#10'lock the GPU to avoid resetting of the device list.'
         Top = 1
-        Width = 84
+        Width = 82
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#GUI_lockgpu'
         BorderSpacing.Left = 10
@@ -3228,11 +3261,11 @@ object fmMCX: TfmMCX
         AnchorSideTop.Side = asrCenter
         AnchorSideBottom.Control = edGPUID
         AnchorSideBottom.Side = asrBottom
-        Left = 470
-        Height = 24
-        Hint = 'ShowProgress'
-        Top = 54
-        Width = 138
+        Left = 468
+        Height = 22
+        Hint = 'ShowProgress '#10#10'Check this option to let MCX/MMC to print a progress bar during the'#10'GPU simulation. In some hardware, this may cause unstable behaviors'#10'such as stalling or never return even the simulation is complete. If such'#10'behavior is detected, please uncheck this option.'
+        Top = 55
+        Width = 136
         HelpType = htKeyword
         HelpKeyword = 'HTML/mcx_help#debug'
         Anchors = [akLeft, akBottom]
@@ -3247,10 +3280,10 @@ object fmMCX: TfmMCX
     object grProgram: TRadioGroup
       AnchorSideBottom.Control = grBasic
       Left = 0
-      Height = 40
+      Height = 38
       Hint = 'MCProgram'
       Top = 0
-      Width = 732
+      Width = 736
       HelpType = htKeyword
       HelpKeyword = 'HTML/mcx_help#GUI_mcprogram'
       Align = alTop
@@ -3264,8 +3297,8 @@ object fmMCX: TfmMCX
       ChildSizing.ShrinkVertical = crsScaleChilds
       ChildSizing.Layout = cclLeftToRightThenTopToBottom
       ChildSizing.ControlsPerLine = 3
-      ClientHeight = 24
-      ClientWidth = 728
+      ClientHeight = 22
+      ClientWidth = 732
       Columns = 3
       Font.Color = clGreen
       ItemIndex = 0
@@ -3282,12 +3315,12 @@ object fmMCX: TfmMCX
     object plOutputDock: TPanel
       Left = 0
       Height = 33
-      Top = 573
-      Width = 732
+      Top = 558
+      Width = 736
       Align = alClient
       BevelOuter = bvNone
       ClientHeight = 33
-      ClientWidth = 732
+      ClientWidth = 736
       DockSite = True
       ParentFont = False
       TabOrder = 5
@@ -3297,7 +3330,7 @@ object fmMCX: TfmMCX
         AnchorSideBottom.Control = plOutputDock
         AnchorSideBottom.Side = asrBottom
         Cursor = crHandPoint
-        Left = 532
+        Left = 536
         Height = 33
         Hint = 'About MCX'
         Top = 0
@@ -30104,11 +30137,6 @@ object fmMCX: TfmMCX
         Hint = 'http://www.osapublishing.org/oe/abstract.cfm?uri=oe-17-22-20178'
         OnClick = mcxdoWebURLExecute
       end
-      object MenuItem58: TMenuItem
-        Caption = '[Yu2018] Original MCX-CL Paper'
-        Hint = 'https://www.spiedigitallibrary.org/journals/journal-of-biomedical-optics/volume-23/issue-01/010504/Scalable-and-massively-parallel-Monte-Carlo-photon-transport-simulations-for/10.1117/1.JBO.23.1.010504.full?SSO=1#ArticleLink'
-        OnClick = mcxdoWebURLExecute
-      end
       object MenuItem57: TMenuItem
         Caption = '[Fang2010] Original MMC Paper'
         Hint = 'https://www.osapublishing.org/boe/abstract.cfm?uri=boe-1-1-165'
@@ -30129,6 +30157,11 @@ object fmMCX: TfmMCX
         Hint = 'https://www.osapublishing.org/boe/abstract.cfm?uri=boe-7-1-171'
         OnClick = mcxdoWebURLExecute
       end
+      object MenuItem58: TMenuItem
+        Caption = '[Yu2018] Original MCX-CL Paper'
+        Hint = 'https://www.spiedigitallibrary.org/journals/journal-of-biomedical-optics/volume-23/issue-01/010504/Scalable-and-massively-parallel-Monte-Carlo-photon-transport-simulations-for/10.1117/1.JBO.23.1.010504.full?SSO=1#ArticleLink'
+        OnClick = mcxdoWebURLExecute
+      end
       object MenuItem62: TMenuItem
         Caption = '[Yao2018] Jacobians with photon replay'
         Hint = 'https://www.osapublishing.org/boe/abstract.cfm?uri=boe-9-10-4588'
@@ -30137,6 +30170,21 @@ object fmMCX: TfmMCX
       object MenuItem63: TMenuItem
         Caption = '[Yan2019] Dual-grid MMC'
         Hint = 'https://na01.safelinks.protection.outlook.com/?url=http%3A%2F%2Fdx.doi.org%2F10.1117%2F1.JBO.24.2.020503&data=02%7C01%7Cq.fang%40northeastern.edu%7Cbb8daa56735543068b9c08d697592492%7Ca8eec281aaa34daeac9b9a398b9215e7%7C0%7C0%7C636862806460866013&sdata=2dWyN3eVPwwymydjXEWIHBfVZI43Fcl5zuZ8wiaJ10k%3D&reserved=0'
+        OnClick = mcxdoWebURLExecute
+      end
+      object MenuItem69: TMenuItem
+        Caption = '[Fang2019] GPU MMC'
+        Hint = 'http://dx.doi.org/10.1117/1.JBO.24.11.115002'
+        OnClick = mcxdoWebURLExecute
+      end
+      object MenuItem71: TMenuItem
+        Caption = '[Yuan2020] PBM over lifespan'
+        Hint = 'https://doi.org/10.1117/1.NPh.7.1.015009'
+        OnClick = mcxdoWebURLExecute
+      end
+      object MenuItem70: TMenuItem
+        Caption = '[Brain2Mesh2020] Brain2Mesh brain meshing toolbox'
+        Hint = 'https://doi.org/10.1117/1.NPh.7.1.015008'
         OnClick = mcxdoWebURLExecute
       end
     end
