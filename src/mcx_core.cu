@@ -23,7 +23,46 @@
 
 @brief   GPU kernel for MC simulations and CUDA host code
 *******************************************************************************/
+#define LEN 512
+#include <stdio.h>
+#include <stdlib.h>
+__constant__ int value[LEN];
+__global__ void get(int* Ad)
+{
+        int tid = blockIdx.x*blockDim.x+threadIdx.x;
+        Ad[tid] = value[tid];
+}
 
+void main_test()
+{
+        int *A, *B, *Ad;
+        A = (int*)malloc(LEN*sizeof(int));
+        B = (int*)malloc(LEN*sizeof(int));
+        for(int i=0; i<LEN; i++){
+                A[i]=-1*i;
+                B[i]=0;
+        }
+        hipMalloc((void**)&Ad,LEN*sizeof(int));
+        hipMemcpyToSymbol(HIP_SYMBOL(value),A,LEN*sizeof(int),0,hipMemcpyHostToDevice);
+        hipLaunchKernelGGL(get, dim3(1), dim3(LEN), 0, 0, Ad);
+        hipMemcpy(B,Ad,LEN*sizeof(int),hipMemcpyDeviceToHost);
+
+        int error=0;
+        for(int i=0; i<LEN; i++){
+                if(A[i] != B[i]){
+                        error = 1;
+                        printf("Error starts element %d, %d != %d\n",i,A[i],B[i]);
+                }
+                if(error)
+                        break;
+        }
+        if(error == 0){
+                printf("No errors\n");
+        }
+        free(A);
+        free(B);
+        hipFree(Ad);
+}
 #define _USE_MATH_DEFINES
 #include <cmath>
 
@@ -482,7 +521,7 @@ __device__ void updateproperty(Medium *prop, unsigned int mediaid){
 	      p[(val.s[0] & 0xC000)>>14]=fabs(__half2float(val.h[1]));
           }else if(gcfg->mediaformat==MEDIA_MUA_FLOAT){
 	      prop->mua=fabs(*((float *)&mediaid));
-              prop->n=gproperty[!(mediaid & MED_MASK)==0].w;
+              prop->n=gproperty[(!(mediaid & MED_MASK)==0)].w;
 	  }else if(gcfg->mediaformat==MEDIA_AS_F2H||gcfg->mediaformat==MEDIA_AS_HALF){
 	      union {
                  unsigned int i;
@@ -495,7 +534,7 @@ __device__ void updateproperty(Medium *prop, unsigned int mediaid){
 	      val.i=mediaid & MED_MASK;
 	      prop->mua=fabs(__half2float(val.h[0]));
 	      prop->mus=fabs(__half2float(val.h[1]));
-	      prop->n=gproperty[!(mediaid & MED_MASK)==0].w;
+	      prop->n=gproperty[(!(mediaid & MED_MASK)==0)].w;
 	  }else if(gcfg->mediaformat==MEDIA_ASGN_BYTE){
 	      union {
                  unsigned int i;
@@ -514,7 +553,7 @@ __device__ void updateproperty(Medium *prop, unsigned int mediaid){
 	      val.i=mediaid & MED_MASK;
 	      prop->mua=val.h[0]*(1.f/65535.f)*(gproperty[2].x-gproperty[1].x)+gproperty[1].x;
 	      prop->mus=val.h[1]*(1.f/65535.f)*(gproperty[2].y-gproperty[1].y)+gproperty[1].y;
-	      prop->n=gproperty[!(mediaid & MED_MASK)==0].w;
+	      prop->n=gproperty[(!(mediaid & MED_MASK)==0)].w;
           }
 }
 
@@ -1115,410 +1154,8 @@ kernel void mcx_main_loop(uint media[],OutputType field[],float genergy[],uint n
      float srcpattern[],float replayweight[],float photontof[],int photondetid[], 
      RandType *seeddata,float *gdebugdata,volatile int *gprogress){
 
-     /** the 1D index of the current thread */
-     int idx= blockDim.x * blockIdx.x + threadIdx.x;
-
-     if(idx>=gcfg->threadphoton*(blockDim.x * gridDim.x)+gcfg->oddphotons)
-         return;
-     MCXpos  p={0.f,0.f,0.f,-1.f};   ///< Photon position state: {x,y,z}: coordinates in grid unit, w:packet weight
-     MCXdir  v={0.f,0.f,0.f, 0.f};   ///< Photon direction state: {x,y,z}: unitary direction vector in grid unit, nscat:total scat event
-     MCXtime f={0.f,0.f,0.f,-1.f};   ///< Photon parameter state: pscat: remaining scattering probability,t: photon elapse time, pathlen: total pathlen in one voxel, ndone: completed photons
-
-     uint idx1d, idx1dold;    ///< linear index to the current voxel in the media array
-
-     uint  mediaid=gcfg->mediaidorig;
-     uint  mediaidold=0;
-     int   isdet=0;
-     float  n1;               ///< reflection var
-     float3 htime;            ///< time-of-flight for collision test
-     float3 rv;               ///< reciprocal velocity
-
-     RandType t[RAND_BUF_LEN];
-     Medium prop;
-
-     float len, slen;
-     OutputType w0;
-     int   flipdir=-1;
- 
-     float *ppath=(float *)(sharedmem+blockDim.x*(gcfg->issaveseed*RAND_BUF_LEN*sizeof(RandType)));
-
-     ppath+=threadIdx.x*(gcfg->w0offset + gcfg->srcnum); // block#2: maxmedia*thread number to store the partial
-     clearpath(ppath,gcfg->w0offset + gcfg->srcnum);
-     ppath[gcfg->partialdata]  =genergy[idx<<1];
-     ppath[gcfg->partialdata+1]=genergy[(idx<<1)+1];
-
-     *((float4*)(&prop))=gproperty[1];
-
-     gpu_rng_init(t,n_seed,idx);
-
-     if(launchnewphoton<isinternal,isreflect,issavedet>(&p,&v,&f,&rv,&prop,&idx1d,field,&mediaid,&w0,0,ppath,
-       n_det,detectedphoton,t,(RandType*)(sharedmem+threadIdx.x*gcfg->issaveseed*RAND_BUF_LEN*sizeof(RandType)),media,srcpattern,
-       idx,(RandType*)n_seed,seeddata,gdebugdata,gprogress)){
-         GPUDEBUG(("thread %d: fail to launch photon\n",idx));
-	 n_pos[idx]=*((float4*)(&p));
-	 n_dir[idx]=*((float4*)(&v));
-	 n_len[idx]=*((float4*)(&f));
-         return;
-     }
-     rv=float3(__fdividef(1.f,v.x),__fdividef(1.f,v.y),__fdividef(1.f,v.z));
-     isdet=mediaid & DET_MASK;
-     mediaid &= MED_MASK; // keep isdet to 0 to avoid launching photon ina 
-
-     /**
-         @brief The main photon movement loop
-	 Each pass of this loop, we advance photon by one step - meaning that it is either
-	 moved from one voxel to the immediately next voxel when the scattering path continues, 
-	 or moved to the end of the scattering path if it ends within the current voxel.
-      */
-
-     while(f.ndone<(gcfg->threadphoton+(idx<gcfg->oddphotons))) {
-
-          GPUDEBUG(("photonid [%d] L=%f w=%e medium=%d\n",(int)f.ndone,f.pscat,p.w,mediaid));
-
-          /**
-              @brief A scattering event
-	      When a photon arrives at a scattering site, 3 values are regenrated
-	      1 - a random unitless scattering length f.pscat,
-	      2 - a 0-2pi uniformly random arimuthal angle
-	      3 - a 0-pi random zenith angle based on the Henyey-Greenstein Phase Function
-           */
-	  if(f.pscat<=0.f) {  ///< if this photon has finished his current scattering path, calculate next scat length & angles
-   	       f.pscat=rand_next_scatlen(t); ///< random scattering probability, unit-less, exponential distribution
-		  
-               GPUDEBUG(("scat L=%f RNG=[%0lX %0lX] \n",f.pscat,t[0],t[1]));
-	       if(v.nscat!=EPS){ ///< if v.nscat is EPS, this means it is the initial launch direction, no need to change direction
-                       ///< random arimuthal angle
-	               float cphi=1.f,sphi=0.f,theta,stheta,ctheta;
-                       float tmp0=0.f;
-		       if(!gcfg->is2d){
-		           tmp0=TWO_PI*rand_next_aangle(t); //next arimuth angle
-                           sincosf(tmp0,&sphi,&cphi);
-		       }
-                       GPUDEBUG(("scat phi=%f\n",tmp0));
-		       tmp0=(v.nscat > gcfg->gscatter) ? 0.f : prop.g;
-
-                       /** Henyey-Greenstein Phase Function, "Handbook of Optical Biomedical Diagnostics",2002,Chap3,p234, also see Boas2002 */
-
-                       if(tmp0>EPS){  ///< if prop.g is too small, the distribution of theta is bad
-		           tmp0=(1.f-prop.g*prop.g)/(1.f-prop.g+2.f*prop.g*rand_next_zangle(t));
-		           tmp0*=tmp0;
-		           tmp0=(1.f+prop.g*prop.g-tmp0)/(2.f*prop.g);
-
-                           // in early CUDA, when ran=1, CUDA gives 1.000002 for tmp0 which produces nan later
-                           // detected by Ocelot,thanks to Greg Diamos,see http://bit.ly/cR2NMP
-                           tmp0=fmax(-1.f, fmin(1.f, tmp0));
-
-		           theta=acosf(tmp0);
-		           stheta=sinf(theta);
-		           ctheta=tmp0;
-                       }else{
-			   theta=acosf(2.f*rand_next_zangle(t)-1.f);
-                           sincosf(theta,&stheta,&ctheta);
-                       }
-                       GPUDEBUG(("scat theta=%f\n",theta));
-#ifdef SAVE_DETECTORS
-                       if(issavedet){
-                           if(SAVE_NSCAT(gcfg->savedetflag))
-		               ppath[(mediaid & MED_MASK)-1]++;
-			   /** accummulate momentum transfer */
-			   if(SAVE_MOM(gcfg->savedetflag))
-			       ppath[gcfg->maxmedia*(SAVE_NSCAT(gcfg->savedetflag)+SAVE_PPATH(gcfg->savedetflag))+(mediaid & MED_MASK)-1]+=1.f-ctheta;
-		       }
-#endif
-                       /** Update direction vector with the two random angles */
-		       if(gcfg->is2d)
-		           rotatevector2d(&v,(rand_next_aangle(t)>0.5f ? stheta: -stheta),ctheta);
-		       else
-                           rotatevector(&v,stheta,ctheta,sphi,cphi);
-                       v.nscat++;
-
-		       /** Only compute the reciprocal vector when v is changed, this saves division calculations, which are very expensive on the GPU */
-                       rv=float3(__fdividef(1.f,v.x),__fdividef(1.f,v.y),__fdividef(1.f,v.z));
-                       if(gcfg->outputtype==otWP || gcfg->outputtype==otDCS){
-                            ///< photontof[] and replayweight[] should be cached using local mem to avoid global read
-                            int tshift=(idx*gcfg->threadphoton+min(idx,gcfg->oddphotons-1)+(int)f.ndone);
-			    tmp0=(gcfg->outputtype==otDCS)? (1.f-ctheta) : 1.f;
-                            tshift=(int)(floorf((photontof[tshift]-gcfg->twin0)*gcfg->Rtstep)) + 
-                                 ( (gcfg->replaydet==-1)? ((photondetid[tshift]-1)*gcfg->maxgate) : 0);
-#ifdef USE_ATOMIC
-                            if(!gcfg->isatomic){
-#endif
-                                field[idx1d+tshift*gcfg->dimlen.z]+=tmp0*replayweight[(idx*gcfg->threadphoton+min(idx,gcfg->oddphotons-1)+(int)f.ndone)];
-#ifdef USE_ATOMIC
-                            }else{
-    #ifdef USE_DOUBLE
-			        atomicAdd(& field[idx1d+tshift*gcfg->dimlen.z], tmp0*replayweight[(idx*gcfg->threadphoton+min(idx,gcfg->oddphotons-1)+(int)f.ndone)]);
-    #else
-			        float oldval=atomicadd(& field[idx1d+tshift*gcfg->dimlen.z], tmp0*replayweight[(idx*gcfg->threadphoton+min(idx,gcfg->oddphotons-1)+(int)f.ndone)]);
-				    if(oldval>MAX_ACCUM){
-				        if(atomicadd(& field[idx1d+tshift*gcfg->dimlen.z], -oldval)<0.f)
-					    atomicadd(& field[idx1d+tshift*gcfg->dimlen.z], oldval);
-					else
-					    atomicadd(& field[idx1d+tshift*gcfg->dimlen.z+gcfg->dimlen.w], oldval);
-				    }
-    #endif
-                                GPUDEBUG(("atomic write to [%d] %e, w=%f\n",idx1d,tmp0*replayweight[(idx*gcfg->threadphoton+min(idx,gcfg->oddphotons-1)+(int)f.ndone)],p.w));
-                            }
-#endif
-                       }
-                       if(gcfg->debuglevel & MCX_DEBUG_MOVE)
-                           savedebugdata(&p,(uint)f.ndone+idx*gcfg->threadphoton+umin(idx,(idx<gcfg->oddphotons)*idx),gdebugdata);
-	       }
-	       v.nscat=(int)v.nscat;
-	  }
-
-          /** Read the optical property of the current voxel */
-          n1=prop.n;
-	  updateproperty(&prop,mediaid);
-
-	  /** Advance photon 1 step to the next voxel */
-	  len=(gcfg->faststep) ? gcfg->minstep : hitgrid((float3*)&p,(float3*)&v,&(htime.x),&rv.x,&flipdir); // propagate the photon to the first intersection to the grid
-	  
-	  /** convert photon movement length to unitless scattering length by multiplying with mus */
-	  slen=len*prop.mus*(v.nscat+1.f > gcfg->gscatter ? (1.f-prop.g) : 1.f); //unitless (minstep=grid, mus=1/grid)
-
-          GPUDEBUG(("p=[%f %f %f] -> <%f %f %f>*%f -> hit=[%f %f %f] flip=%d\n",p.x,p.y,p.z,v.x,v.y,v.z,len,htime.x,htime.y,htime.z,flipdir));
-
-	  /** if the consumed unitless scat length is less than what's left in f.pscat, keep moving; otherwise, stop in this voxel */
-	  slen=fmin(slen,f.pscat);
-	  
-	  /** final length that the photon moves - either the length to move to the next voxel, or the remaining scattering length */
-	  len=slen/(prop.mus*(v.nscat+1.f > gcfg->gscatter ? (1.f-prop.g) : 1.f));
-	  
-	  /** if photon moves to the next voxel, use the precomputed intersection coord. htime which are assured to be outside of the current voxel */
-	  *((float3*)(&p)) = (gcfg->faststep || slen==f.pscat) ? float3(p.x+len*v.x,p.y+len*v.y,p.z+len*v.z) : float3(htime.x,htime.y,htime.z);
-	  
-	  /** calculate photon energy loss */
-#ifdef USE_MORE_DOUBLE
-	  p.w*=exp(-(OutputType)prop.mua*len);
-#else
-	  p.w*=expf(-prop.mua*len);
-#endif
-
-	  /** remaining unitless scattering length: sum(s_i*mus_i), unit-less */
-	  f.pscat-=slen;
-
-	  /** update photon timer to add time-of-flight (unit = s) */
-	  f.t+=len*prop.n*gcfg->oneoverc0;
-	  f.pathlen+=len;
-
-          GPUDEBUG(("update p=[%f %f %f] -> len=%f\n",p.x,p.y,p.z,len));
-
-#ifdef SAVE_DETECTORS
-	  /** accummulate partial path of the current medium */
-	  if(issavedet)
-	    if(SAVE_PPATH(gcfg->savedetflag))
-	      ppath[gcfg->maxmedia*(SAVE_NSCAT(gcfg->savedetflag))+(mediaid & MED_MASK)-1]+=len; //(unit=grid)
-#endif
-
-          mediaidold=mediaid | isdet;
-          idx1dold=idx1d;
-          idx1d=(int(floorf(p.z))*gcfg->dimlen.y+int(floorf(p.y))*gcfg->dimlen.x+int(floorf(p.x)));
-          GPUDEBUG(("idx1d [%d]->[%d]\n",idx1dold,idx1d));
-
-	  /** read the medium index of the new voxel (current or next) */
-          if(p.x<0.f||p.y<0.f||p.z<0.f||p.x>=gcfg->maxidx.x||p.y>=gcfg->maxidx.y||p.z>=gcfg->maxidx.z){
-              /** if photon moves outside of the volume, set mediaid to 0 */
-	      mediaid=0;
-	      isdet=gcfg->bc[(!(p.x<0.f||p.y<0.f||p.z<0.f))*3+flipdir];  /** isdet now stores the boundary condition flag, this will be overwriten before the end of the loop */
-              GPUDEBUG(("moving outside: [%f %f %f], idx1d [%d]->[out], bcflag %d\n",p.x,p.y,p.z,idx1d,isdet));
-	      idx1d=(p.x<0.f||p.y<0.f||p.z<0.f) ? OUTSIDE_VOLUME_MIN : OUTSIDE_VOLUME_MAX;
-	  }else{
-              /** otherwise, read the optical property index */
-	      mediaid=media[idx1d];
-	      isdet=mediaid & DET_MASK;  /** upper 16bit is the mask of the covered detector */
-	      mediaid &= MED_MASK;       /** lower 16bit is the medium index */
-          }
-          GPUDEBUG(("medium [%d]->[%d]\n",mediaidold,mediaid));
-
-          /**  save fluence to the voxel when photon moves out */
-	  if(idx1d!=idx1dold && mediaidold){
-
-             /**  if t is within the time window, which spans cfg->maxgate*cfg->tstep.wide */
-             if(gcfg->save2pt && f.t>=gcfg->twin0 && f.t<gcfg->twin1){
-#ifdef USE_MORE_DOUBLE
-	          OutputType weight=ZERO;
-#else
-	          float weight=0.f;
-#endif
-                  int tshift=(int)(floorf((f.t-gcfg->twin0)*gcfg->Rtstep));
-		  
-		  /** calculate the quality to be accummulated */
-		  if(gcfg->outputtype==otEnergy)
-		      weight=w0-p.w;
-		  else if(gcfg->outputtype==otFluence || gcfg->outputtype==otFlux)
-		      weight=(prop.mua==0.f) ? 0.f : ((w0-p.w)/(prop.mua));
-		  else if(gcfg->seed==SEED_FROM_FILE){
-		      if(gcfg->outputtype==otJacobian){
-		        weight=replayweight[(idx*gcfg->threadphoton+min(idx,gcfg->oddphotons-1)+(int)f.ndone)]*f.pathlen;
-			tshift=(idx*gcfg->threadphoton+min(idx,gcfg->oddphotons-1)+(int)f.ndone);
-			tshift=(int)(floorf((photontof[tshift]-gcfg->twin0)*gcfg->Rtstep)) + 
-			   ( (gcfg->replaydet==-1)? ((photondetid[tshift]-1)*gcfg->maxgate) : 0);
-		      }
-		  }
-
-                  GPUDEBUG(("deposit to [%d] %e, w=%f\n",idx1dold,weight,p.w));
-
-              if(weight>0.f){
-#ifdef USE_ATOMIC
-                if(!gcfg->isatomic){
-#endif
-                  /** accummulate the quality to the volume using non-atomic operations  */
-                  field[idx1dold+tshift*gcfg->dimlen.z]+=weight;
-#ifdef USE_ATOMIC
-               }else{
-	          /** accummulate the quality to the volume using atomic operations  */
-                  // ifndef CUDA_NO_SM_11_ATOMIC_INTRINSICS
-		  if(gcfg->srctype!=MCX_SRC_PATTERN && gcfg->srctype!=MCX_SRC_PATTERN3D){
-    #ifdef USE_DOUBLE
-		      atomicAdd(& field[idx1dold+tshift*gcfg->dimlen.z], weight);
-    #else
-		      float oldval=atomicadd(& field[idx1dold+tshift*gcfg->dimlen.z], weight);
-		      if(oldval>MAX_ACCUM){
-			if(atomicadd(& field[idx1dold+tshift*gcfg->dimlen.z], -oldval)<0.f)
-			    atomicadd(& field[idx1dold+tshift*gcfg->dimlen.z], oldval);
-			else
-			    atomicadd(& field[idx1dold+tshift*gcfg->dimlen.z+gcfg->dimlen.w], oldval);
-		      }
-    #endif
-		  }else{
-		      for(int i=0;i<gcfg->srcnum;i++){
-		        if(ppath[gcfg->w0offset+i]>0.f){
-    #ifdef USE_DOUBLE
-		          atomicAdd(& field[(idx1dold+tshift*gcfg->dimlen.z)*gcfg->srcnum+i], weight*ppath[gcfg->w0offset+i]);
-    #else
-		          float oldval=atomicadd(& field[(idx1dold+tshift*gcfg->dimlen.z)*gcfg->srcnum+i], weight*ppath[gcfg->w0offset+i]);
-		          if(oldval>MAX_ACCUM){
-			      if(atomicadd(& field[(idx1dold+tshift*gcfg->dimlen.z)*gcfg->srcnum+i], -oldval)<0.f)
-			        atomicadd(& field[(idx1dold+tshift*gcfg->dimlen.z)*gcfg->srcnum+i], oldval);
-			      else
-			        atomicadd(& field[(idx1dold+tshift*gcfg->dimlen.z)*gcfg->srcnum+i+gcfg->dimlen.w], oldval);
-			  }
-    #endif
-			}
-		      }
-		  }
-                  GPUDEBUG(("atomic write to [%d] %e, w=%f\n",idx1dold,weight,p.w));
-               }
-#endif
-              }
-	     }
-	     w0=p.w;
-	     f.pathlen=0.f;
-	  }
-
-	  /** launch new photon when exceed time window or moving from non-zero voxel to zero voxel without reflection */
-          if((mediaid==0 && (((isdet & 0xF)==0 && (!gcfg->doreflect || (gcfg->doreflect && n1==gproperty[0].w))) || (isdet==bcAbsorb || isdet==bcCylic) )) || f.t>gcfg->twin1){
-	      if(isdet==bcCylic){
-                 if(flipdir==0)  p.x=mcx_nextafterf(roundf(p.x+((idx1d==OUTSIDE_VOLUME_MIN) ? gcfg->maxidx.x: -gcfg->maxidx.x)),(v.x > 0.f)-(v.x < 0.f));
-                 if(flipdir==1)  p.y=mcx_nextafterf(roundf(p.y+((idx1d==OUTSIDE_VOLUME_MIN) ? gcfg->maxidx.y: -gcfg->maxidx.y)),(v.y > 0.f)-(v.y < 0.f));
-                 if(flipdir==2)  p.z=mcx_nextafterf(roundf(p.z+((idx1d==OUTSIDE_VOLUME_MIN) ? gcfg->maxidx.z: -gcfg->maxidx.z)),(v.z > 0.f)-(v.z < 0.f));
-		 if(!(p.x<0.f||p.y<0.f||p.z<0.f||p.x>=gcfg->maxidx.x||p.y>=gcfg->maxidx.y||p.z>=gcfg->maxidx.z)){
-                     idx1d=(int(floorf(p.z))*gcfg->dimlen.y+int(floorf(p.y))*gcfg->dimlen.x+int(floorf(p.x)));
-	             mediaid=media[idx1d];
-	             isdet=mediaid & DET_MASK;  /** upper 16bit is the mask of the covered detector */
-	             mediaid &= MED_MASK;       /** lower 16bit is the medium index */
-                     GPUDEBUG(("Cylic boundary condition, moving photon in dir %d at %d flag, new pos=[%f %f %f]\n",flipdir,isdet,p.x,p.y,p.z));
-	             continue;
-		 }
-	      }
-              GPUDEBUG(("direct relaunch at idx=[%d] mediaid=[%d], ref=[%d] bcflag=%d timegate=%d\n",idx1d,mediaid,gcfg->doreflect,isdet,f.t>gcfg->twin1));
-	      if(launchnewphoton<isinternal,isreflect,issavedet>(&p,&v,&f,&rv,&prop,&idx1d,field,&mediaid,&w0,(mediaidold & DET_MASK),ppath,
-	          n_det,detectedphoton,t,(RandType*)(sharedmem+threadIdx.x*gcfg->issaveseed*RAND_BUF_LEN*sizeof(RandType)),
-		  media,srcpattern,idx,(RandType*)n_seed,seeddata,gdebugdata,gprogress))
-                   break;
-              isdet=mediaid & DET_MASK;
-              mediaid &= MED_MASK;
-	      continue;
-	  }
-
-          /** perform Russian Roulette*/
-          if(p.w < gcfg->minenergy){
-                if(rand_do_roulette(t)*ROULETTE_SIZE<=1.f)
-                   p.w*=ROULETTE_SIZE;
-                else{
-                   GPUDEBUG(("relaunch after Russian roulette at idx=[%d] mediaid=[%d], ref=[%d]\n",idx1d,mediaid,gcfg->doreflect));
-                   if(launchnewphoton<isinternal,isreflect,issavedet>(&p,&v,&f,&rv,&prop,&idx1d,field,&mediaid,&w0,(mediaidold & DET_MASK),ppath,
-	                n_det,detectedphoton,t,(RandType*)(sharedmem+threadIdx.x*gcfg->issaveseed*RAND_BUF_LEN*sizeof(RandType)),
-			media,srcpattern,idx,(RandType*)n_seed,seeddata,gdebugdata,gprogress))
-                        break;
-                   isdet=mediaid & DET_MASK;
-                   mediaid &= MED_MASK;
-                   continue;
-               }
-          }
-
-          /** do boundary reflection/transmission */
-	  if(isreflect){
-	      if(gcfg->mediaformat==MEDIA_LABEL_HALF)
-	          updateproperty(&prop,mediaid); ///< optical property across the interface
-	      if(((gcfg->doreflect && (isdet & 0xF)==0) || (isdet & 0x1)) && n1!=((gcfg->mediaformat==MEDIA_LABEL_HALF)? (prop.n):(float)(gproperty[(mediaid>0 && gcfg->mediaformat>=100)?1:mediaid].w))){
-	          float Rtotal=1.f;
-	          float cphi,sphi,stheta,ctheta,tmp0,tmp1;
-
-                  updateproperty(&prop,mediaid); ///< optical property across the interface  
-
-                  tmp0=n1*n1;
-                  tmp1=prop.n*prop.n;
-		  cphi=fabs( (flipdir==0) ? v.x : (flipdir==1 ? v.y : v.z)); // cos(si)
-		  sphi=1.f-cphi*cphi;            // sin(si)^2
-
-                  len=1.f-tmp0/tmp1*sphi;   //1-[n1/n2*sin(si)]^2 = cos(ti)^2
-	          GPUDEBUG(("ref total ref=%f\n",len));
-
-                  if(len>0.f) { ///< if no total internal reflection
-                	ctheta=tmp0*cphi*cphi+tmp1*len;
-                	stheta=2.f*n1*prop.n*cphi*sqrtf(len);
-                	Rtotal=(ctheta-stheta)/(ctheta+stheta);
-       	       		ctheta=tmp1*cphi*cphi+tmp0*len;
-       	       		Rtotal=(Rtotal+(ctheta-stheta)/(ctheta+stheta))*0.5f;
-	        	GPUDEBUG(("Rtotal=%f\n",Rtotal));
-                  } ///< else, total internal reflection
-	          if(Rtotal<1.f && (((isdet & 0xF)==0 && ((gcfg->mediaformat==MEDIA_LABEL_HALF) ? prop.n:(float)(gproperty[mediaid].w)) >= 1.f) || isdet==bcReflect) && rand_next_reflect(t)>Rtotal){ // do transmission
-                        transmit(&v,n1,prop.n,flipdir);
-                        if(mediaid==0){ // transmission to external boundary
-                            GPUDEBUG(("transmit to air, relaunch\n"));
-		    	    if(launchnewphoton<isinternal,isreflect,issavedet>(&p,&v,&f,&rv,&prop,&idx1d,field,&mediaid,&w0,(mediaidold & DET_MASK),
-			        ppath,n_det,detectedphoton,t,(RandType*)(sharedmem+threadIdx.x*gcfg->issaveseed*RAND_BUF_LEN*sizeof(RandType)),
-				media,srcpattern,idx,(RandType*)n_seed,seeddata,gdebugdata,gprogress))
-                                break;
-                            isdet=mediaid & DET_MASK;
-                            mediaid &= MED_MASK;
-			    continue;
-			}
-	                GPUDEBUG(("do transmission\n"));
-                        rv=float3(__fdividef(1.f,v.x),__fdividef(1.f,v.y),__fdividef(1.f,v.z));
-		  }else{ ///< do reflection
-	                GPUDEBUG(("ref faceid=%d p=[%f %f %f] v_old=[%f %f %f]\n",flipdir,p.x,p.y,p.z,v.x,v.y,v.z));
-			(flipdir==0) ? (v.x=-v.x) : ((flipdir==1) ? (v.y=-v.y) : (v.z=-v.z)) ;
-                        rv=float3(__fdividef(1.f,v.x),__fdividef(1.f,v.y),__fdividef(1.f,v.z));
-			(flipdir==0) ?
-        		    ((float)(p.x=mcx_nextafterf(__float2int_rn(p.x), (v.x > 0.f)-(v.x < 0.f)))) :
-			    ((flipdir==1) ? 
-				(p.y=mcx_nextafterf(__float2int_rn(p.y), (v.y > 0.f)-(v.y < 0.f))) :
-				(p.z=mcx_nextafterf(__float2int_rn(p.z), (v.z > 0.f)-(v.z < 0.f))) );
-	                GPUDEBUG(("ref p_new=[%f %f %f] v_new=[%f %f %f]\n",p.x,p.y,p.z,v.x,v.y,v.z));
-                	idx1d=idx1dold;
-		 	mediaid=(media[idx1d] & MED_MASK);
-        	  	updateproperty(&prop,mediaid); ///< optical property across the interface
-                  	n1=prop.n;
-		  }
-	      }else if(gcfg->mediaformat==MEDIA_LABEL_HALF)
-	          updateproperty(&prop,mediaidold); ///< optical property across the interface
-	  }
-     }
-
-     /** return the tracked total energyloss and launched energy back to the host */
-     genergy[idx<<1]    =ppath[gcfg->partialdata];
-     genergy[(idx<<1)+1]=ppath[gcfg->partialdata+1];
      
-     if(gcfg->issaveref>1)
-         *detectedphoton=gcfg->maxdetphoton;
 
-     /** for debugging purposes, we also pass the last photon states back to the host for printing */
-     n_pos[idx]=*((float4*)(&p));
-     n_dir[idx]=*((float4*)(&v));
-     n_len[idx]=*((float4*)(&f));
 }
 
 /**
@@ -1734,7 +1371,7 @@ void mcx_run_simulation(Config *cfg,GPUInfo *gpu){
 #endif
      if(threadid<MAX_DEVICE && cfg->deviceid[threadid]=='\0')
            return;
-
+     main_test();
      gpuid=cfg->deviceid[threadid]-1;
      if(gpuid<0)
           mcx_error(-1,"GPU ID must be non-zero",__FILE__,__LINE__);
@@ -2022,12 +1659,13 @@ void mcx_run_simulation(Config *cfg,GPUInfo *gpu){
 
      CUDA_ASSERT(hipMemcpy(gmedia, media, sizeof(uint)*cfg->dim.x*cfg->dim.y*cfg->dim.z, hipMemcpyHostToDevice));
      CUDA_ASSERT(hipMemcpy(genergy,energy,sizeof(float) *(gpu[gpuid].autothread<<1), hipMemcpyHostToDevice));
-     if(cfg->srcpattern)
-        if(cfg->srctype==MCX_SRC_PATTERN)
+     if(cfg->srcpattern){
+        if(cfg->srctype==MCX_SRC_PATTERN){
            CUDA_ASSERT(hipMemcpy(gsrcpattern,cfg->srcpattern,sizeof(float)*(int)(cfg->srcparam1.w*cfg->srcparam2.w*cfg->srcnum), hipMemcpyHostToDevice));
-	else if(cfg->srctype==MCX_SRC_PATTERN3D)
-	   CUDA_ASSERT(hipMemcpy(gsrcpattern,cfg->srcpattern,sizeof(float)*(int)(cfg->srcparam1.x*cfg->srcparam1.y*cfg->srcparam1.z*cfg->srcnum), hipMemcpyHostToDevice));
-     
+        } else if(cfg->srctype==MCX_SRC_PATTERN3D){
+	       CUDA_ASSERT(hipMemcpy(gsrcpattern,cfg->srcpattern,sizeof(float)*(int)(cfg->srcparam1.x*cfg->srcparam1.y*cfg->srcparam1.z*cfg->srcnum), hipMemcpyHostToDevice));
+        }
+     }
 
      CUDA_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(gproperty), cfg->prop,  cfg->medianum*sizeof(Medium), 0, hipMemcpyHostToDevice));
      CUDA_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(gproperty), cfg->detpos,  cfg->detnum*sizeof(float4), cfg->medianum*sizeof(Medium), hipMemcpyHostToDevice));

@@ -46,7 +46,7 @@ else ifeq ($(BACKEND),cudastatic)
   LINKOPT=-L/usr/local/cuda/lib -lm $(CUDART)
   CUCCOPT=-g -lineinfo -Xcompiler -Wall#-arch compute_20 #--maxrregcount 32
 else
-  LINKOPT=-L/usr/local/cuda/lib -lm $(CUDART)
+  LINKOPT=
   CUCCOPT=-g -lineinfo -Xcompiler -Wall#-arch compute_20 #--maxrregcount 32
 endif
 
@@ -142,7 +142,7 @@ fermimex fermioct: OUTPUTFLAG:=-output
 
 fermi:      LINKOPT+=$(CUOMPLINK) $(OMP)
 
-debugxor debuglog:	CUCCOPT+=-DMCX_DEBUG
+debugxor debuglog:	CUCCOPT+=-DMCX_DEBUG -DSAVE_DETECTORS
 fermi fermimex fermioct:     CUCCOPT+=-DSAVE_DETECTORS -use_fast_math $(CUGENCODE)
 fermi fermimex fermioct: CUCCOPT+=-DMCX_TARGET_NAME='"Fermi MCX"'
 xorfermi:   xor

@@ -550,7 +550,7 @@ void mcx_normalize(float field[], float scale, int fieldlen, int option, int pid
  */
  
  float mcx_updatemua(unsigned int mediaid, Config *cfg){
-     float mua;
+     float mua=0.0;
      if(cfg->mediabyte<=4)
          mua=cfg->prop[mediaid & MED_MASK].mua;
      else if(cfg->mediabyte==MEDIA_MUA_FLOAT)
