@@ -23,46 +23,7 @@
 
 @brief   GPU kernel for MC simulations and CUDA host code
 *******************************************************************************/
-#define LEN 512
-#include <stdio.h>
-#include <stdlib.h>
-__constant__ int value[LEN];
-__global__ void get(int* Ad)
-{
-        int tid = blockIdx.x*blockDim.x+threadIdx.x;
-        Ad[tid] = value[tid];
-}
 
-void main_test()
-{
-        int *A, *B, *Ad;
-        A = (int*)malloc(LEN*sizeof(int));
-        B = (int*)malloc(LEN*sizeof(int));
-        for(int i=0; i<LEN; i++){
-                A[i]=-1*i;
-                B[i]=0;
-        }
-        hipMalloc((void**)&Ad,LEN*sizeof(int));
-        hipMemcpyToSymbol(HIP_SYMBOL(value),A,LEN*sizeof(int),0,hipMemcpyHostToDevice);
-        hipLaunchKernelGGL(get, dim3(1), dim3(LEN), 0, 0, Ad);
-        hipMemcpy(B,Ad,LEN*sizeof(int),hipMemcpyDeviceToHost);
-
-        int error=0;
-        for(int i=0; i<LEN; i++){
-                if(A[i] != B[i]){
-                        error = 1;
-                        printf("Error starts element %d, %d != %d\n",i,A[i],B[i]);
-                }
-                if(error)
-                        break;
-        }
-        if(error == 0){
-                printf("No errors\n");
-        }
-        free(A);
-        free(B);
-        hipFree(Ad);
-}
 #define _USE_MATH_DEFINES
 #include <cmath>
 
@@ -114,6 +75,7 @@ void main_test()
  */
 
 __constant__ float4 gproperty[MAX_PROP_AND_DETECTORS];
+
 
 
 /**
@@ -1371,7 +1333,6 @@ void mcx_run_simulation(Config *cfg,GPUInfo *gpu){
 #endif
      if(threadid<MAX_DEVICE && cfg->deviceid[threadid]=='\0')
            return;
-     main_test();
      gpuid=cfg->deviceid[threadid]-1;
      if(gpuid<0)
           mcx_error(-1,"GPU ID must be non-zero",__FILE__,__LINE__);
