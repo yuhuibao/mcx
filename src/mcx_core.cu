@@ -1247,7 +1247,7 @@ int mcx_list_gpu(Config *cfg, GPUInfo **info){
     return activedev;
 #endif
 }
-
+__constant__ float4 gprop[MAX_PROP_AND_DETECTORS];
 
 /**
  * @brief Master host code for the MCX simulation kernel (!!!Important!!!)
@@ -1261,7 +1261,9 @@ int mcx_list_gpu(Config *cfg, GPUInfo **info){
  */
 
 void mcx_run_simulation(Config *cfg,GPUInfo *gpu){
-
+    printf("constant is %d\n",MAX_PROP_AND_DETECTORS);
+    CUDA_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(gprop), cfg->prop,  cfg->medianum*sizeof(Medium), 0, hipMemcpyHostToDevice));
+    CUDA_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(gprop), cfg->detpos,  cfg->detnum*sizeof(float4), cfg->medianum*sizeof(Medium), hipMemcpyHostToDevice));
      int i,iter;
      float  minstep=1.f; //MIN(MIN(cfg->steps.x,cfg->steps.y),cfg->steps.z);
      float4 p0=float4(cfg->srcpos.x,cfg->srcpos.y,cfg->srcpos.z,1.f);
