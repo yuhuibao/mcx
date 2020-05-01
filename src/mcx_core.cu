@@ -1261,9 +1261,9 @@ __constant__ float4 gprop[MAX_PROP_AND_DETECTORS];
  */
 
 void mcx_run_simulation(Config *cfg,GPUInfo *gpu){
-    printf("constant is %d\n",MAX_PROP_AND_DETECTORS);
-    CUDA_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(gprop), cfg->prop,  cfg->medianum*sizeof(Medium), 0, hipMemcpyHostToDevice));
-    CUDA_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(gprop), cfg->detpos,  cfg->detnum*sizeof(float4), cfg->medianum*sizeof(Medium), hipMemcpyHostToDevice));
+    //printf("constant is %d\n",MAX_PROP_AND_DETECTORS);
+    //CUDA_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(gprop), cfg->prop,  cfg->medianum*sizeof(Medium), 0, hipMemcpyHostToDevice));
+    //CUDA_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(gprop), cfg->detpos,  cfg->detnum*sizeof(float4), cfg->medianum*sizeof(Medium), hipMemcpyHostToDevice));
      int i,iter;
      float  minstep=1.f; //MIN(MIN(cfg->steps.x,cfg->steps.y),cfg->steps.z);
      float4 p0=float4(cfg->srcpos.x,cfg->srcpos.y,cfg->srcpos.z,1.f);
@@ -1630,8 +1630,8 @@ void mcx_run_simulation(Config *cfg,GPUInfo *gpu){
         }
      }
 
-     CUDA_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(gproperty), cfg->prop,  cfg->medianum*sizeof(Medium), 0, hipMemcpyHostToDevice));
-     CUDA_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(gproperty), cfg->detpos,  cfg->detnum*sizeof(float4), cfg->medianum*sizeof(Medium), hipMemcpyHostToDevice));
+     //CUDA_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(gproperty), cfg->prop,  cfg->medianum*sizeof(Medium), 0, hipMemcpyHostToDevice));
+     //CUDA_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(gproperty), cfg->detpos,  cfg->detnum*sizeof(float4), cfg->medianum*sizeof(Medium), hipMemcpyHostToDevice));
 
      MCX_FPRINTF(cfg->flog,"init complete : %d ms\n",GetTimeMillis()-tic);
 

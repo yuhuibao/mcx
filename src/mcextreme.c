@@ -30,10 +30,17 @@
 #ifdef _OPENMP
   #include <omp.h>
 #endif
-
+#define CUDA_ASSERT(a)      mcx_cu_assess((a),__FILE__,__LINE__) 
+//_constant__ float4 gprop1[4000];
+__constant__ int gprop2[100];
 int main (int argc, char *argv[]) {
      /*! structure to store all simulation parameters 
       */
+     int prop[100];
+     for(int i=0;i<100;i++){
+          prop[i] = 1;
+     }
+     CUDA_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(gprop2), prop,  100*sizeof(int), 0, hipMemcpyHostToDevice));
      Config  mcxconfig;            /** mcxconfig: structure to store all simulation parameters */
      GPUInfo *gpuinfo=NULL;        /** gpuinfo: structure to store GPU information */
      unsigned int activedev=0;     /** activedev: count of total active GPUs to be used */
@@ -48,12 +55,17 @@ int main (int argc, char *argv[]) {
         Then, we parse the full command line parameters and set user specified settings
       */
      mcx_parsecmd(argc,argv,&mcxconfig);
-
+     
+     Config* cfg = &mcxconfig;
+     CUDA_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(gprop2), prop,  100*sizeof(int), 0, hipMemcpyHostToDevice));
+     CUDA_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(gprop1), cfg->prop,  cfg->medianum*sizeof(Medium), 0, hipMemcpyHostToDevice));
+    //printf("rv is %d\n",rv);
+     CUDA_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(gprop1), cfg->detpos,  cfg->detnum*sizeof(float4), cfg->medianum*sizeof(Medium), hipMemcpyHostToDevice));
      /** The next step, we identify gpu number and query all GPU info */
      if(!(activedev=mcx_list_gpu(&mcxconfig,&gpuinfo))){
          mcx_error(-1,"No GPU device found\n",__FILE__,__LINE__);
      }
-
+     
 #ifdef _OPENMP
      /** 
         Now we are ready to launch one thread for each involked GPU to run the simulation 

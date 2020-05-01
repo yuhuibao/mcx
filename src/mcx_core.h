@@ -28,6 +28,7 @@
 
 #include "mcx_utils.h"
 
+
 #ifdef  __cplusplus
 extern "C" {
 #endif
@@ -153,6 +154,7 @@ typedef struct  __attribute__((aligned(16))) KernelParams {
 
 void mcx_run_simulation(Config *cfg,GPUInfo *gpu);
 int  mcx_list_gpu(Config *cfg, GPUInfo **info);
+void mcx_cu_assess(hipError_t cuerr,const char *file, const int linenum);
 
 #ifdef  __cplusplus
 }
