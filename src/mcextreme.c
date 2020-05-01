@@ -31,9 +31,51 @@
   #include <omp.h>
 #endif
 #define CUDA_ASSERT(a)      mcx_cu_assess((a),__FILE__,__LINE__) 
+#define LEN 512
+#include <stdio.h>
+#include <stdlib.h>
+__constant__ int value[LEN];
+__global__ void get(int* Ad)
+{
+        int tid = blockIdx.x*blockDim.x+threadIdx.x;
+        Ad[tid] = value[tid];
+}
+
+
+void main_test()
+{
+        int *A, *B, *Ad;
+        A = (int*)malloc(LEN*sizeof(int));
+        B = (int*)malloc(LEN*sizeof(int));
+        for(int i=0; i<LEN; i++){
+                A[i]=-1*i;
+                B[i]=0;
+        }
+        hipMalloc((void**)&Ad,LEN*sizeof(int));
+        hipMemcpyToSymbol(HIP_SYMBOL(value),A,LEN*sizeof(int),0,hipMemcpyHostToDevice);
+        hipLaunchKernelGGL(get, dim3(1), dim3(LEN), 0, 0, Ad);
+        hipMemcpy(B,Ad,LEN*sizeof(int),hipMemcpyDeviceToHost);
+
+        int error=0;
+        for(int i=0; i<LEN; i++){
+                if(A[i] != B[i]){
+                        error = 1;
+                        printf("Error starts element %d, %d != %d\n",i,A[i],B[i]);
+                }
+                if(error)
+                        break;
+        }
+        if(error == 0){
+                printf("No errors\n");
+        }
+        free(A);
+        free(B);
+        hipFree(Ad);
+}
 //_constant__ float4 gprop1[4000];
 __constant__ int gprop2[100];
 int main (int argc, char *argv[]) {
+     main_test();
      /*! structure to store all simulation parameters 
       */
      int prop[100];
