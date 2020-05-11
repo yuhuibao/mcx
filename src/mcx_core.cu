@@ -95,8 +95,6 @@ __device__ uint gjumpdebug[1];
  * @brief Pointer to the shared memory (storing photon data and spilled registers)
  */
 
-HIP_DYNAMIC_SHARED( char, sharedmem)
-
 /**
  * @brief Texture memory for storing media indices
  *
@@ -1114,6 +1112,8 @@ kernel void mcx_main_loop(uint media[],OutputType field[],float genergy[],uint n
      float4 n_pos[],float4 n_dir[],float4 n_len[],float n_det[], uint detectedphoton[], 
      float srcpattern[],float replayweight[],float photontof[],int photondetid[], 
      RandType *seeddata,float *gdebugdata,volatile int *gprogress){
+HIP_DYNAMIC_SHARED( char, sharedmem)
+
 
      /** the 1D index of the current thread */
      int idx= blockDim.x * blockIdx.x + threadIdx.x;
