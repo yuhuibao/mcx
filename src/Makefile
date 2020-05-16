@@ -100,6 +100,7 @@ endif
 
 CUGENCODE?=-arch=sm_30
 OUTPUTFLAG:=-o
+CUCCOPT+=-DHCC_ENABLE_ACCELERATOR_PRINTF
 
 ##  Target section  ##
 

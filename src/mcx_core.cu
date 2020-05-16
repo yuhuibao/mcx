@@ -403,16 +403,26 @@ __device__ inline float hitgrid(float3 *p0, float3 *v, float *htime,float* rv,in
  * @param[in] flipdir: 0: transmit through x=x0 plane; 1: through y=y0 plane; 2: through z=z0 plane
  */
  
-__device__ inline void transmit(MCXdir *v, float n1, float n2,int flipdir){
-      float tmp0=n1/n2;
-      v->x*=tmp0;
-      v->y*=tmp0;
-      v->z*=tmp0;
-      (flipdir==0) ?
-          (v->x= ((tmp0 = v->y*v->y + v->z*v->z) <1.f) ? sqrtf(1.f - tmp0)*((v->x>0.f)-(v->x<0.f)) : 0.f):
-	  ((flipdir==1) ? 
-	      (v->y=((tmp0 = v->x*v->x + v->z*v->z) <1.f) ? sqrtf(1.f - tmp0)*((v->y>0.f)-(v->y<0.f)) : 0.f):
-	      (v->z=((tmp0 = v->x*v->x + v->y*v->y) <1.f) ? sqrtf(1.f - tmp0)*((v->z>0.f)-(v->z<0.f)) : 0.f));
+__device__ inline void transmit(float4 *v, float n1, float n2,int flipdir){
+        float tmp0=n1/n2;
+        v->x*=tmp0;
+        v->y*=tmp0;
+        v->z*=tmp0;
+        float tmpz = v->x*v->x + v->y*v->y;
+        float tmpy = v->x*v->x + v->z*v->z; 
+        float tmpx = v->y*v->y + v->z*v->z;
+        if(flipdir == 0){
+                v->x = tmpx < 1.f ? sqrtf(1.f - tmpz)*((v->x>0.f)-(v->x<0.f)) : 0.f; 
+        }else{
+                if(flipdir == 1){
+                        v->y = tmpy < 1.f ? sqrtf(1.f - tmpy)*((v->y>0.f)-(v->y<0.f)) : 0.f;
+                }else{
+                        v->z = tmpz < 1.f ? sqrtf(1.f - tmpz)*((v->z>0.f)-(v->z<0.f)) : 0.f;
+                }
+        }
+      
+      
+      
       tmp0=rsqrtf(v->x*v->x + v->y*v->y + v->z*v->z);
       v->x*=tmp0;
       v->y*=tmp0;
@@ -587,7 +597,13 @@ __device__ inline int skipvoid(MCXpos *p,MCXdir *v,MCXtime *f,float3* rv,uint me
 	            p->w*=1.f-reflectcoeff(v, gproperty[0].w,htime.w,flipdir);
                     GPUDEBUG(("transmitted intensity w=%e\n",p->w));
 	            if(p->w>EPS){
-		        transmit(v, gproperty[0].w,htime.w,flipdir);
+                        float4* v4;
+                        v4->x = v->x;
+                        v4->y = v->y;
+                        v4->z = v->z;
+                        v4->w = v->nscat; 
+                        transmit(v4, gproperty[0].w,htime.w,flipdir);
+                        printf("I am second transmit\n");
                         GPUDEBUG(("transmit into volume v=<%f %f %f>\n",v->x,v->y,v->z));
                     }
 		}
@@ -1475,7 +1491,12 @@ HIP_DYNAMIC_SHARED( char, sharedmem)
 	        	GPUDEBUG(("Rtotal=%f\n",Rtotal));
                   } ///< else, total internal reflection
 	          if(Rtotal<1.f && (((isdet & 0xF)==0 && ((gcfg->mediaformat==MEDIA_LABEL_HALF) ? prop.n:(float)(gproperty[mediaid].w)) >= 1.f) || isdet==bcReflect) && rand_next_reflect(t)>Rtotal){ // do transmission
-                        transmit(&v,n1,prop.n,flipdir);
+                  float4 v4;
+                  v4.x=v.x;
+                  v4.y=v.y;
+                  v4.z=v.z;
+                  v4.w=v.nscat; 
+                        transmit(&v4,n1,prop.n,flipdir);
                         if(mediaid==0){ // transmission to external boundary
                             GPUDEBUG(("transmit to air, relaunch\n"));
 		    	    if(launchnewphoton<isinternal,isreflect,issavedet>(&p,&v,&f,&rv,&prop,&idx1d,field,&mediaid,&w0,(mediaidold & DET_MASK),
