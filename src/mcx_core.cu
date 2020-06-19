@@ -1665,7 +1665,7 @@ int mcx_list_gpu(Config *cfg, GPUInfo **info){
     }
     if(activedev<MAX_DEVICE)
         cfg->deviceid[activedev]='\0';
-
+    
     return activedev;
 #endif
 }
@@ -2169,8 +2169,10 @@ are more than what your have specified (%d), please use the --maxjumpdebug optio
                            ,debugrec,cfg->maxjumpdebug);
 		   }else{
 			MCX_FPRINTF(cfg->flog,"saved %ud trajectory positions, total: %d\t",debugrec,cfg->maxjumpdebug+debugrec);
-		   }
-                   debugrec=min(debugrec,cfg->maxjumpdebug);
+                   }
+                   if(cfg->maxjumpdebug < debugrec){
+                           debugrec = cfg->maxjumpdebug;
+                   }
 	           cfg->exportdebugdata=(float*)realloc(cfg->exportdebugdata,(cfg->debugdatalen+debugrec)*debuglen*sizeof(float));
                    CUDA_ASSERT(hipMemcpy(cfg->exportdebugdata+cfg->debugdatalen, gdebugdata,sizeof(float)*debuglen*debugrec,hipMemcpyDeviceToHost));
                    cfg->debugdatalen+=debugrec;
@@ -2387,7 +2389,7 @@ is more than what your have specified (%d), please use the -H option to specify 
      // total energy here equals total simulated photons+unfinished photons for all threads
      MCX_FPRINTF(cfg->flog,"simulated %ld photons (%ld) with %d threads (repeat x%d)\nMCX simulation speed: " S_BOLD "" S_BLUE "%.2f photon/ms\n" S_RESET,
              (long int)cfg->nphoton*((cfg->respin>1) ? (cfg->respin) : 1),(long int)cfg->nphoton*((cfg->respin>1) ? (cfg->respin) : 1),
-	     gpu[gpuid].autothread,ABS(cfg->respin),(double)cfg->nphoton*((cfg->respin>1) ? (cfg->respin) : 1)/max(1,cfg->runtime)); fflush(cfg->flog);
+	     gpu[gpuid].autothread,ABS(cfg->respin),(double)(cfg->nphoton*((cfg->respin>1) ? (cfg->respin) : 1)/cfg->runtime)); fflush(cfg->flog);
      if(cfg->srctype==MCX_SRC_PATTERN && cfg->srcnum>1){
          for(i=0;i<(int)cfg->srcnum;i++){
 	     MCX_FPRINTF(cfg->flog,"source #%d total simulated energy: %.2f\tabsorbed: " S_BOLD "" S_BLUE "%5.5f%%" S_RESET"\n(loss due to initial specular reflection is excluded in the total)\n",
