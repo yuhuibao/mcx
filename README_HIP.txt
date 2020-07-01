@@ -28,7 +28,11 @@ are found but after further checks the program can print out device information.
 If you run mcx/bin/mcx -L, the GPU info is print out.
 The problem arises when the hipGetDeviceProperties gets called in a loop for the
 second time, it changes the value of another user_defined variable in the loop.
+When I run on each individual GPU once a time, the error never happens. 
 
 The 1 and 2 issues are found when working with ROCm3.0 on a server with two identical AMD gpus.
 The 3 issue are found when working with ROCm3.3 on a server with two different AMD gpus.
 
+When I test this program with the newest version ROCm3.5 on a server with two identical AMD gpus,
+I saw the same error as the third issue produces. However, even runing mcx/bin/mcx -L will
+cause the No GPU device found error.
