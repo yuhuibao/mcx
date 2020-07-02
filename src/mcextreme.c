@@ -28,7 +28,7 @@
 #include "mcx_utils.h"
 #include "mcx_core.h"
 #ifdef _OPENMP
-  #include <omp.h>
+  #include "omp.h"
 #endif
 
 int main (int argc, char *argv[]) {

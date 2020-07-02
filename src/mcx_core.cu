@@ -57,7 +57,7 @@
 #endif
 
 #ifdef _OPENMP                      ///< use multi-threading for running simulation on multiple GPUs
-    #include <omp.h>
+    #include "omp.h"
 #endif
 
 #define CUDA_ASSERT(a)      mcx_cu_assess((a),__FILE__,__LINE__) ///< macro to report CUDA errors

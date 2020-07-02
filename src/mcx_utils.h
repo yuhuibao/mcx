@@ -34,7 +34,7 @@
 #include "nifti1.h"
 
 #ifdef _OPENMP                      ///< use multi-threading for running simulation on multiple GPUs
-    #include <omp.h>
+    #include "omp.h"
 #endif
 
 #define EPS                FLT_EPSILON                   /**< round-off limit */

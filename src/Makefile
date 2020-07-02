@@ -44,10 +44,10 @@ else ifeq ($(BACKEND),cudastatic)
       CUDART=-lcudadevrt -lcudart_static -ldl -lrt -static-libgcc -static-libstdc++
   endif
   LINKOPT=-L/usr/local/cuda/lib -lm $(CUDART)
-  CUCCOPT=-g -lineinfo -Xcompiler -Wall#-arch compute_20 #--maxrregcount 32
+  CUCCOPT=-g -lineinfo -Xcompiler -Wall #-arch compute_20 #--maxrregcount 32
 else
   LINKOPT=-L/usr/local/cuda/lib -lm $(CUDART)
-  CUCCOPT=-g -lineinfo -Xcompiler -Wall#-arch compute_20 #--maxrregcount 32
+  CUCCOPT=-g -lineinfo -Xcompiler -Wall --amdgpu-target=gfx803 #-arch compute_20 #--maxrregcount 32
 endif
 
 DLLFLAG=-fPIC
